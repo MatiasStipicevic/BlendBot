@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResiBot · Blend Apoquindo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- EmailJS para notificaciones sin backend -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #ffffff; color: #0a0a0a; }
+
+        .top-bar         { background: #000; border-bottom: 1px solid #1a1a1a; }
+        .logo-blend      { font-size: 1.25rem; font-weight: 900; color: #fff; letter-spacing: -0.02em; line-height: 1; }
+        .logo-sub        { font-size: 0.52rem; font-weight: 400; color: #fff; letter-spacing: 0.18em; text-transform: uppercase; margin-top: 3px; }
+
+        .switch-wrap     { background: #1a1a1a; border: 1px solid #2a2a2a; }
+        .btn-active      { background: #fff; color: #000; }
+        .btn-inactive    { color: #888; }
+        .btn-inactive:hover { color: #fff; }
+
+        .chat-area       { background: #f9f9f9; }
+        .chat-subbar     { background: #fff; border-bottom: 1px solid #ebebeb; }
+        .depto-input     { background: #f4f4f4; border: 1px solid #e0e0e0; color: #0a0a0a; font-size: 12px; transition: border-color 0.2s; }
+        .depto-input:focus { outline: none; border-color: #000; }
+
+        .bot-bubble      { background: #fff; border: 1px solid #e8e8e8; color: #0a0a0a; }
+        .user-bubble     { background: #000; color: #fff; }
+        .bot-avatar      { background: #0a0a0a; color: #fff; }
+        .urgent-badge    { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 999px; }
+
+        .input-bar       { background: #fff; border-top: 1px solid #ebebeb; }
+        .chat-input      { background: #f4f4f4; border: 1px solid #e0e0e0; color: #0a0a0a; }
+        .chat-input::placeholder { color: #b0b0b0; }
+        .chat-input:focus { outline: none; border-color: #000; }
+        .send-btn        { background: #000; color: #fff; }
+        .send-btn:hover  { background: #222; }
+
+        /* Urgencia selector */
+        .urgency-btn     { border: 1px solid #e0e0e0; background: #f4f4f4; color: #888; font-size: 11px; font-weight: 600; border-radius: 8px; padding: 6px 10px; cursor: pointer; transition: all 0.2s; }
+        .urgency-btn.active { background: #fee2e2; border-color: #fca5a5; color: #dc2626; }
+
+        /* Lang toggle */
+        .lang-btn        { font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 6px; cursor: pointer; transition: all 0.15s; }
+        .lang-btn.active { background: #fff; color: #000; }
+        .lang-btn.inactive { color: #666; }
+
+        /* Admin */
+        .login-card      { background: #fff; border: 1px solid #e0e0e0; }
+        .admin-input     { background: #f4f4f4; border: 1px solid #e0e0e0; color: #0a0a0a; }
+        .admin-input:focus { outline: none; border-color: #000; }
+        .admin-btn       { background: #000; color: #fff; }
+        .admin-btn:hover { background: #222; }
+
+        /* Dashboard */
+        .dash-card       { background: #fff; border: 1px solid #e8e8e8; }
+        .dash-head-row   { background: #fafafa; color: #888; border-bottom: 1px solid #ebebeb; }
+        .dash-row:hover  { background: #fafafa; }
+        .badge-ok        { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+        .badge-no        { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+        .badge-urgent    { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
+        .bar-track       { background: #ebebeb; }
+        .stat-card       { background: #f4f4f4; border: 1px solid #e8e8e8; }
+        .retrain-btn     { background: #f4f4f4; border: 1px solid #e0e0e0; color: #0a0a0a; }
+        .retrain-btn:hover:not(:disabled) { background: #000; color: #fff; border-color: #000; }
+        .retrain-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .export-btn      { background: #000; color: #fff; font-size: 11px; font-weight: 600; padding: 6px 14px; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+        .export-btn:hover { background: #222; }
+        .know-card       { background: #0a0a0a; color: #fff; }
+        .know-code       { background: #1a1a1a; color: #e0e0e0; border: 1px solid #2a2a2a; }
+
+        /* Toast notificación */
+        #toast { position: fixed; bottom: 24px; right: 24px; background: #000; color: #fff; padding: 12px 20px; border-radius: 12px; font-size: 12px; font-weight: 500; opacity: 0; transform: translateY(8px); transition: all 0.3s; z-index: 9999; pointer-events: none; }
+        #toast.show { opacity: 1; transform: translateY(0); }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 2px; }
+    </style>
+</head>
+<body class="min-h-screen antialiased flex flex-col">
+
+<!-- Toast global -->
+<div id="toast"></div>
+
+<!-- ══ HEADER ══════════════════════════════════════════════════════════════════ -->
+<header class="top-bar sticky top-0 z-50 px-6 py-3.5 flex items-center justify-between gap-4">
+
+    <!-- Logo -->
+    <div class="flex flex-col shrink-0">
+        <div class="logo-blend">BLEND</div>
+        <div class="logo-sub">Apoquindo</div>
+    </div>
+
+    <!-- Centro: idioma -->
+    <div class="hidden sm:flex items-center gap-1 switch-wrap px-1.5 py-1 rounded-lg">
+        <button onclick="setLang('es')" id="lang-es" class="lang-btn active">ES</button>
+        <button onclick="setLang('en')" id="lang-en" class="lang-btn inactive">EN</button>
+    </div>
+
+    <!-- Switch de vistas -->
+    <div class="switch-wrap p-1 rounded-xl flex space-x-1 shrink-0">
+        <button onclick="switchView('user')" id="btn-view-user"
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold transition btn-active">
+            <i class="fa-solid fa-comment-dots mr-1.5"></i><span data-t="resident">Residente</span>
+        </button>
+        <button onclick="switchView('admin')" id="btn-view-admin"
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold transition btn-inactive">
+            <i class="fa-solid fa-lock mr-1.5"></i><span data-t="admin">Administración</span>
+        </button>
+    </div>
+</header>
+
+<!-- ══ MAIN ═══════════════════════════════════════════════════════════════════ -->
+<main class="flex-1 flex overflow-hidden" style="height:calc(100vh - 65px)">
+
+    <!-- ════ VISTA RESIDENTE ══════════════════════════════════════════════════ -->
+    <section id="view-user" class="flex-1 flex flex-col w-full chat-area">
+
+        <!-- Sub-header -->
+        <div class="chat-subbar px-5 py-2.5 flex justify-between items-center gap-3">
+            <div class="flex items-center gap-2 text-xs">
+                <span class="w-2 h-2 rounded-full" style="background:#000;box-shadow:0 0 5px rgba(0,0,0,0.3)"></span>
+                <span class="text-gray-400 text-[11px]" data-t="online">En línea · atención inmediata</span>
+                    <span id="ia-badge" class="hidden items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full" style="background:rgba(0,0,0,0.08);color:#0a0a0a"><i class="fa-solid fa-microchip text-[9px]"></i> IA Activa</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <!-- Urgencia -->
+                <button id="urgency-toggle" onclick="toggleUrgency()"
+                    class="urgency-btn flex items-center gap-1.5">
+                    <i class="fa-solid fa-triangle-exclamation text-[10px]"></i>
+                    <span data-t="urgent">Urgente</span>
+                </button>
+                <!-- Depto -->
+                <div class="flex items-center gap-1.5">
+                    <label class="text-[10px] text-gray-400" data-t="yourDepto">Tu depto:</label>
+                    <input type="text" id="input-depto-opcional" oninput="onDeptoChange()"
+                        placeholder="Ej: 405"
+                        class="depto-input px-2 py-1 rounded-lg w-20 text-center font-mono">
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensajes -->
+        <div id="chat-messages" class="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar"></div>
+
+        <!-- Input -->
+        <div class="input-bar p-3.5">
+            <div class="max-w-3xl mx-auto flex items-center gap-2">
+                <input type="text" id="input-query" onkeypress="handleKeyPress(event)"
+                    class="chat-input flex-1 rounded-xl px-4 py-3 text-sm"
+                    data-placeholder-es="Escribe tu consulta (ej: ¿Cuáles son los horarios del quincho?)..."
+                    data-placeholder-en="Type your question (e.g.: What are the BBQ area hours?)..."
+                    placeholder="Escribe tu consulta aquí...">
+                <button onclick="enviarConsulta()" class="send-btn p-3 rounded-xl transition shrink-0">
+                    <i class="fa-solid fa-paper-plane text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ════ VISTA ADMINISTRADOR ════════════════════════════════════════════ -->
+    <section id="view-admin" class="hidden flex-1 flex flex-col w-full overflow-hidden" style="background:#f9f9f9">
+
+        <!-- LOGIN -->
+        <div id="admin-login" class="flex-1 flex items-center justify-center px-4">
+            <div class="login-card p-8 rounded-2xl w-full max-w-sm shadow-xl space-y-6">
+                <div class="flex flex-col items-center gap-1 mb-1">
+                    <div class="flex flex-col items-center px-7 py-4 rounded-xl" style="background:#000">
+                        <span style="font-size:22px;font-weight:900;color:#fff;letter-spacing:-0.02em;line-height:1">BLEND</span>
+                        <span style="font-size:8px;font-weight:400;color:#fff;letter-spacing:0.2em;text-transform:uppercase;display:block;margin-top:3px">Apoquindo</span>
+                    </div>
+                    <p class="text-[11px] text-gray-400 mt-3 text-center">Consola de Administración</p>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-semibold text-gray-500 block mb-1">Usuario</label>
+                        <input type="text" id="admin-user" placeholder="Admin"
+                            class="admin-input w-full rounded-xl px-3 py-2.5 text-sm font-mono">
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold text-gray-500 block mb-1">Contraseña</label>
+                        <input type="password" id="admin-pass" placeholder="••••••••"
+                            class="admin-input w-full rounded-xl px-3 py-2.5 text-sm font-mono"
+                            onkeypress="if(event.key==='Enter') loginAdmin()">
+                    </div>
+                    <button onclick="loginAdmin()" class="admin-btn w-full text-sm font-semibold py-3 rounded-xl transition">
+                        Ingresar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div id="admin-dashboard" class="hidden flex-1 flex flex-col lg:flex-row overflow-hidden p-5 gap-5">
+
+            <!-- Columna principal -->
+            <div class="flex-1 flex flex-col space-y-5 overflow-y-auto custom-scrollbar pr-1">
+
+                <!-- Frecuencia temática -->
+                <div class="dash-card rounded-xl p-5 shadow-sm">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h3 class="text-sm font-bold">Frecuencia Temática</h3>
+                            <p class="text-[11px] text-gray-400 mt-0.5">Temas extraídos de las consultas de residentes.</p>
+                        </div>
+                        <span class="text-[10px] px-2 py-1 rounded font-mono text-gray-400" style="background:#f4f4f4;border:1px solid #e8e8e8">Real-Time</span>
+                    </div>
+                    <div class="space-y-3.5" id="container-topics"></div>
+                </div>
+
+                <!-- Tabla auditoría -->
+                <div class="dash-card rounded-xl overflow-hidden shadow-sm flex flex-col flex-1">
+                    <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-sm font-bold">Auditoría de Chats</h3>
+                            <p class="text-xs text-gray-400 mt-0.5">Historial vinculado a unidades del edificio.</p>
+                        </div>
+                        <button onclick="exportarCSV()" class="export-btn flex items-center gap-1.5">
+                            <i class="fa-solid fa-download text-[10px]"></i> Exportar CSV
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="dash-head-row text-xs font-semibold">
+                                    <th class="p-3">Unidad</th>
+                                    <th class="p-3">Consulta</th>
+                                    <th class="p-3">Categoría</th>
+                                    <th class="p-3">Urgencia</th>
+                                    <th class="p-3">Fecha</th>
+                                    <th class="p-3 text-center">Estatus</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-logs-body" class="divide-y divide-gray-50"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna derecha -->
+            <div class="w-full lg:w-72 space-y-4 flex flex-col shrink-0 overflow-y-auto custom-scrollbar">
+
+                <!-- Precisión IA -->
+                <div class="dash-card rounded-xl p-5 shadow-sm space-y-4">
+                    <h3 class="text-sm font-bold border-b pb-3 border-gray-100">Rendimiento IA</h3>
+                    <div class="p-3 rounded-xl stat-card">
+                        <div class="flex justify-between text-xs mb-2">
+                            <span class="text-gray-500">Precisión</span>
+                            <span class="font-mono font-bold" id="txt-precision">91.8%</span>
+                        </div>
+                        <div class="w-full bar-track h-1.5 rounded-full overflow-hidden">
+                            <div class="h-full rounded-full transition-all duration-700" style="background:#000;width:91.8%" id="bar-precision"></div>
+                        </div>
+                    </div>
+                    <button onclick="ejecutarReentrenamiento()" id="btn-reentrenar"
+                        class="retrain-btn w-full py-2.5 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-arrows-spin"></i> Re-entrenar
+                    </button>
+                </div>
+
+                <!-- Métricas globales -->
+                <div class="dash-card rounded-xl p-5 shadow-sm space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-gray-400">Métricas Globales</h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="stat-card p-3 rounded-xl text-center">
+                            <p class="text-[10px] text-gray-400 uppercase font-medium">Total</p>
+                            <p class="text-xl font-mono font-bold mt-1" id="stat-total-consultas">4</p>
+                        </div>
+                        <div class="stat-card p-3 rounded-xl text-center">
+                            <p class="text-[10px] text-gray-400 uppercase font-medium">Urgentes</p>
+                            <p class="text-xl font-mono font-bold mt-1 text-orange-600" id="stat-urgentes">0</p>
+                        </div>
+                        <div class="stat-card p-3 rounded-xl text-center">
+                            <p class="text-[10px] text-gray-400 uppercase font-medium">Resueltas</p>
+                            <p class="text-xl font-mono font-bold mt-1 text-green-600" id="stat-resueltas">3</p>
+                        </div>
+                        <div class="stat-card p-3 rounded-xl text-center">
+                            <p class="text-[10px] text-gray-400 uppercase font-medium">Desvío</p>
+                            <p class="text-xl font-mono font-bold mt-1" id="stat-desvio">84%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cola de mejoras pendientes -->
+                <div class="dash-card rounded-xl p-5 shadow-sm space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-gray-400 flex items-center justify-between">
+                        <span><i class="fa-solid fa-circle-exclamation text-red-400 mr-1.5"></i>Mejoras Pendientes</span>
+                        <span id="feedback-badge" class="hidden bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full">0</span>
+                    </h4>
+                    <div id="feedback-queue">
+                        <p class="text-[11px] text-gray-400 text-center py-2">Sin feedback negativo. El bot va bien.</p>
+                    </div>
+                </div>
+
+                <!-- Historial por depto -->
+                <div class="dash-card rounded-xl p-5 shadow-sm space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-gray-400">
+                        <i class="fa-solid fa-building mr-1.5"></i>Historial por Depto
+                    </h4>
+                    <div class="flex gap-2">
+                        <input type="text" id="buscar-depto-admin" placeholder="Ej: 405"
+                            class="admin-input flex-1 rounded-lg px-3 py-2 text-xs font-mono">
+                        <button onclick="buscarHistorialDepto()"
+                            class="admin-btn px-3 py-2 rounded-lg text-xs font-semibold transition">
+                            <i class="fa-solid fa-search"></i>
+                        </button>
+                    </div>
+                    <div id="depto-history-result" class="text-[11px] text-gray-400 text-center py-2">
+                        Ingresa un número de depto para ver su historial.
+                    </div>
+                </div>
+
+                <!-- Configuración IA -->
+                <div class="dash-card rounded-xl p-5 shadow-sm space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-gray-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-microchip"></i> Motor de IA
+                    </h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">
+                        Conecta IA real para respuestas inteligentes. Clave gratuita en
+                        <a href="https://console.groq.com" target="_blank" class="underline font-medium text-gray-600">console.groq.com</a>
+                    </p>
+                    <input type="password" id="input-groq-key" placeholder="gsk_..."
+                        class="admin-input w-full rounded-xl px-3 py-2 text-xs font-mono">
+                    <button onclick="guardarGroqKey()"
+                        class="admin-btn w-full py-2 rounded-xl text-xs font-semibold transition">
+                        <i class="fa-solid fa-plug mr-1.5"></i>Activar Motor IA
+                    </button>
+                    <div id="ia-status" class="text-[11px] text-center text-gray-400 leading-relaxed"></div>
+                </div>
+
+                <!-- Base de conocimiento -->
+                <div class="know-card rounded-xl p-5 space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-gray-400">
+                        <i class="fa-solid fa-book-open mr-1.5"></i>Base de Conocimiento
+                    </h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">
+                        Agrega temas en el código fuente en dos lugares marcados con comentarios.
+                    </p>
+                    <div class="know-code text-[10px] rounded-lg p-3 space-y-1 font-mono leading-relaxed">
+                        <p class="text-gray-500">// 1 · Agrega la respuesta:</p>
+                        <p>bodega: "Las bodegas..."</p>
+                        <br>
+                        <p class="text-gray-500">// 2 · Agrega la clave:</p>
+                        <p>if(low.includes("bodega"))</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+
+
+
+<!-- ══ LÓGICA ══════════════════════════════════════════════════════════════════ -->
+<script>
+// ════════════════════════════════════════════════════════════════
+// CONFIGURACIÓN
+// ════════════════════════════════════════════════════════════════
+const ADMIN_USER        = "Admin";
+const ADMIN_PASS        = "Bl3nd@Ap0#2026x";
+const EMAIL_ADMIN       = "mstipicevic@largroup.cl";
+const MAX_HISTORIAL     = 20;
+const EMAILJS_SERVICE   = "TU_SERVICE_ID";
+const EMAILJS_TEMPLATE  = "TU_TEMPLATE_ID";
+const EMAILJS_PUBLIC_KEY = "TU_PUBLIC_KEY";
+
+// ════════════════════════════════════════════════════════════════
+// MOTOR DE IA — Groq (llama-3.3-70b · free tier)
+// Clave gratuita en: https://console.groq.com
+// ════════════════════════════════════════════════════════════════
+const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions';
+const GROQ_MODEL = 'llama-3.3-70b-versatile';
+
+function buildSystemPrompt() {
+    var b = baseConocimiento.es;
+    var lang = currentLang === 'en' ? 'English' : 'español';
+    return 'Eres el asistente de Blend Apoquindo, un edificio residencial de lujo en Las Condes, Santiago de Chile. ' +
+    'Hablas en ' + lang + ' con un tono cercano, amable y natural — como un conserje experto que conoce el edificio de memoria. ' +
+    'NUNCA menciones el reglamento, normas, articulos, ni que eres un bot. Simplemente da la informacion de forma directa y conversacional. ' +
+    'NUNCA uses frases como: "Segun el reglamento", "El reglamento indica", "La normativa dice", "De acuerdo a las normas". ' +
+    'En cambio, habla asi: "Claro, el quincho cierra a las 00:00", "El maximo es 20 personas", "Para eso tienes que coordinar con conserjeria". ' +
+    'Usa el conocimiento del edificio para responder directamente. Si algo no esta en tu informacion, di: "Para eso te recomiendo escribir a gsilva@largroup.cl, te ayudan rapido." ' +
+    'Si la pregunta es ambigua, haz UNA pregunta corta para aclarar. Respuestas cortas — maximo 3-4 oraciones. ' +
+    '=== REGLAMENTO INTERNO BLEND APOQUINDO ===\n\n' +
+    '[ACCESO]\n' + b.acceso + '\n\n[VISITAS]\n' + b.visitas + '\n\n[LLAVES]\n' + b.llaves + '\n\n' +
+    '[CAPACIDAD]\n' + b.capacidad + '\n\n[SERVICIOS]\n' + b.servicios + '\n\n[MODIFICACIONES]\n' + b.modificaciones + '\n\n' +
+    '[ESTACIONAMIENTO]\n' + b.estacionamiento + '\n\n[ESTAC.VISITAS]\n' + b.visita_estac + '\n\n[BICICLETAS]\n' + b.bicicletas + '\n\n' +
+    '[DELIVERY]\n' + b.delivery + '\n\n[ECOMMERCE]\n' + b.ecommerce + '\n\n[ASCENSORES]\n' + b.ascensor + '\n\n' +
+    '[MUDANZAS]\n' + b.mudanza + '\n\n[BASURA]\n' + b.basura + '\n\n[RECICLAJE]\n' + b.reciclaje + '\n\n' +
+    '[RUIDOS]\n' + b.ruido + '\n\n[MASCOTAS]\n' + b.mascota + '\n\n[QUINCHOS]\n' + b.quincho + '\n\n' +
+    '[SALAS]\n' + b.sala + '\n\n[PISCINA]\n' + b.piscina + '\n\n[GIMNASIO]\n' + b.gimnasio + '\n\n' +
+    '[RESERVAS]\n' + b.reserva + '\n\n[FUMAR]\n' + b.fumar + '\n\n[ALCOHOL]\n' + b.alcohol + '\n\n' +
+    '[SANCIONES]\n' + b.multa + '\n\n[PROCESO DE SANCIONES]\n' + b.sanciones + '\n\n[PISO SPC]\n' + b.piso + '\n\n[LIMPIEZA]\n' + b.limpieza;
+}
+
+function buildMessages(userMessage) {
+    var msgs = [{ role: 'system', content: buildSystemPrompt() }];
+    try {
+        var depto = (typeof sincronizarDepto === 'function') ? sincronizarDepto() : '';
+        if (depto) {
+            var hist = JSON.parse(localStorage.getItem('blend_chat_depto_' + depto) || '[]');
+            hist.slice(-6).forEach(function(m) {
+                msgs.push({ role: m.sender === 'user' ? 'user' : 'assistant', content: m.texto.replace(/<[^>]+>/g,' ') });
+            });
+        }
+    } catch(e) {}
+    msgs.push({ role: 'user', content: userMessage });
+    return msgs;
+}
+
+async function callGroqAI(userMessage) {
+    var apiKey = localStorage.getItem('resibot_groq_key');
+    if (!apiKey) return null;
+    var controller = new AbortController();
+    var timeoutId  = setTimeout(function() { controller.abort(); }, 20000); // 20s max
+    try {
+        var resp = await fetch(GROQ_URL, {
+            method: 'POST',
+            signal: controller.signal,
+            headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: GROQ_MODEL,
+                messages: buildMessages(userMessage),
+                max_tokens: 500, temperature: 0.2
+            })
+        });
+        clearTimeout(timeoutId);
+        if (!resp.ok) {
+            var err = await resp.json();
+            mostrarToast('⚠️ Error IA: ' + ((err.error && err.error.message) ? err.error.message.substring(0,60) : 'Revisa tu API Key'));
+            return null;
+        }
+        var data = await resp.json();
+        return (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || null;
+    } catch(e) {
+        clearTimeout(timeoutId);
+        if (e.name === 'AbortError') mostrarToast('⏱ IA tardó demasiado — usando respuestas automáticas');
+        else console.warn('AI fallback:', e);
+        return null;
+    }
+}
+
+function guardarGroqKey() {
+    var key = document.getElementById('input-groq-key').value.trim();
+    if (!key) { mostrarToast('Ingresa una API Key válida'); return; }
+    localStorage.setItem('resibot_groq_key', key);
+    actualizarEstadoIA();
+    mostrarToast('IA activada correctamente');
+}
+function borrarGroqKey() {
+    localStorage.removeItem('resibot_groq_key');
+    document.getElementById('input-groq-key').value = '';
+    actualizarEstadoIA();
+    mostrarToast('IA desconectada');
+}
+function actualizarEstadoIA() {
+    var key    = localStorage.getItem('resibot_groq_key');
+    var statusEl = document.getElementById('ia-status');
+    var badgeEl  = document.getElementById('ia-badge');
+    if (!statusEl) return;
+    if (key) {
+        var masked = key.substring(0,6) + '••••' + key.slice(-4);
+        statusEl.innerHTML = '<span style="color:#16a34a;font-weight:600">● IA Activa</span> <span class="font-mono text-[10px] text-gray-400">(' + masked + ')</span> &nbsp;<button onclick="borrarGroqKey()" class="text-red-400 underline text-[10px]">Desconectar</button>';
+        if (badgeEl) badgeEl.classList.remove('hidden'), badgeEl.classList.add('inline-flex');
+    } else {
+        statusEl.textContent = 'Sin IA — usando respuestas automáticas';
+        if (badgeEl) badgeEl.classList.add('hidden'), badgeEl.classList.remove('inline-flex');
+    }
+}
+
+const baseConocimiento = {
+    es: {
+        // ── ACCESO Y SEGURIDAD ──────────────────────────────────────
+        acceso:         "El acceso al edificio se realiza con tu PIN personal. Las visitas deben ser autorizadas por el residente y registradas en recepción con cédula de identidad. Solo el titular del contrato puede autorizar el ingreso de visitas, ya sea en persona, por escrito o a través del software habilitado.",
+        visitas:        "Las visitas pueden permanecer máximo 15 días continuos por mes y en no más de 3 oportunidades al año. Debes informar a la administración con anticipación. Si tienes trabajadora de casa particular, regístrala en recepción con nombre y cédula de identidad.",
+        llaves:         "Si olvidaste tus llaves o dispositivo de acceso: en horario administrativo (09:00–18:00) el costo es UF 1. Fuera de ese horario, UF 3. Solo el titular del contrato puede hacer esta solicitud, en persona con su identificación.",
+        capacidad:      "Capacidad máxima por tipo de departamento: Estudio: 1 persona · 1D1B: 2 personas · 2D2B: 3 a 4 personas. Las visitas no pueden quedarse más de 15 días continuos por mes calendario.",
+        servicios:      "Cada residente es responsable de contratar y pagar sus propias cuentas de servicios básicos (electricidad, agua, internet, TV cable). Al mudarte debes poner los servicios a tu nombre. Cualquier problema de facturación lo resuelves directamente con el proveedor.",
+        modificaciones: "Está prohibido: derribar muros, modificar paredes, cambiar ventanas o puertas exteriores, modificar la plomería o sistema eléctrico, instalar climatización externa, realizar perforaciones, hacer adiciones a balcones o cambiar la fachada del edificio.",
+        // ── ESTACIONAMIENTOS ────────────────────────────────────────
+        estacionamiento:"Tu estacionamiento es personal e intransferible: un vehículo por espacio. Velocidad máxima: 20 km/h. Prohibido: almacenar objetos o basura, lavar vehículos, realizar reparaciones, usar bocina para solicitar apertura de portones. Los vehículos mal estacionados pueden ser removidos. No dejes objetos de valor en tu auto.",
+        visita_estac:   "Los estacionamientos de visita son exclusivos para tus invitados (los arrendatarios NO pueden usarlos). No se reservan con anticipación. Máximo 2 espacios simultáneos por departamento. Tiempo máximo: 5 horas diarias. Si se excede, la multa es 0,5 UF por día. Todo vehículo debe registrar patente e identidad del conductor en recepción.",
+        bicicletas:     "Las bicicletas y e-bikes deben guardarse solo en los bicicleteros habilitados o en tu bodega. Prohibido subirlas en los ascensores, dejarlas en terrazas o colgarlas en barandas. La administración no se responsabiliza por robos o pérdidas.",
+        // ── DELIVERY Y ECOMMERCE ────────────────────────────────────
+        delivery:       "Los deliverys y empresas de reparto NO pueden subir a los pisos del edificio. Debes bajar a recepción o a la Sala de Ecommerce (piso 1, frente a recepción) a retirar tus pedidos. Tienes máximo 15 minutos para retirar pedidos de comida. Para emergencias o consultas contacta al teléfono del edificio Blend-LAR.",
+        ecommerce:      "La Sala de Ecommerce está en el piso 1, frente a recepción. Funciona las 24 horas todos los días del año. Cuenta con casilleros Kubi para recibir todo tipo de encomiendas. Los pedidos de comida deben retirarse en máximo 15 minutos o la administración los retirará.",
+        // ── ASCENSORES ──────────────────────────────────────────────
+        ascensor:       "Los ascensores deben usarse responsablemente. Dar prioridad a personas con movilidad reducida. Prohibido transportar muebles, bicicletas u objetos pesados sin autorización y protecciones. Menores de 12 años solo con adulto. No bloquear puertas ni abrirlas manualmente. En caso de falla: usa el botón de emergencia y espera asistencia.",
+        // ── MUDANZAS ────────────────────────────────────────────────
+        mudanza:        "Las mudanzas deben coordinarse con la administración con mínimo 48 hrs de anticipación. Horarios permitidos: Lunes a viernes 09:00–18:00 · Sábado 10:00–14:00 · Domingos NO se permiten. Acceso obligatorio por subterráneo -2 (altura máxima del camión: 3,6 m), nunca por el hall principal. Los materiales de embalaje deben ser retirados por el residente.",
+        // ── BASURA Y RECICLAJE ──────────────────────────────────────
+        basura:         "La basura va en bolsas plásticas cerradas por los ductos del edificio. Horario del shaft: 08:00–22:00 hrs. Prohibido arrojar vidrios, cartones ni objetos grandes por los ductos. El reciclaje (botellas, cartones, vidrios) debe dejarse ordenado en las repisas al lado del ducto. La arena de gato y materiales pesados van directamente a la sala de basura en el piso -2. El retiro de basura por el camión municipal es coordinado por la administración del edificio — consulta en conserjería el calendario de retiro.",
+        reciclaje:      "El edificio tiene closets especiales para reciclar plásticos, vidrios, latas y cartones pequeños. Cajas grandes de mudanza deben dejarse desarmadas en la sala de basura. Está prohibido dejar basura o reciclaje en los estacionamientos o espacios comunes.",
+        // ── RUIDOS ──────────────────────────────────────────────────
+        ruido:          "Reuniones con ruido moderado: permitidas de lunes a domingo de 08:30 a 21:00 hrs. Obras o reparaciones con ruido: lunes a viernes 09:00–18:00 · sábado 10:00–14:00 · domingos y festivos prohibido. En caso de ruidos molestos la administración puede cursar multas de 5 UF.",
+        // ── MASCOTAS ────────────────────────────────────────────────
+        mascota:        "Las mascotas requieren autorización previa de la administración y una garantía. Se permiten solo mascotas domésticas de máximo 15 kg (no razas peligrosas ni animales exóticos). Deben transitar siempre con correa por pasillos y ascensores. Están prohibidas en áreas comunes en general. Vacunación y desparasitación obligatoria según Ley 21020. Multa por incumplimiento: 5 UF.",
+        // ── ÁREAS COMUNES ────────────────────────────────────────────
+        quincho:        "Los quinchos (Spicy Grill, Tasty Grill, Crispy Grill) se reservan por el portal de residentes. Horario todos los días: Bloque A 12:00–16:00 · Bloque B 19:00–00:00. Costo: $30.000 CLP · Aforo: 20 personas. Lista de invitados: enviar 1 día antes o 2 hrs antes del evento. Las luces se apagan automáticamente a las 00:15 hrs. Cancelaciones: hasta 12 hrs antes por WhatsApp o correo (no por citófono).",
+        sala:           "Las salas multiusos (Spark Room, Smooth Room, Clear Room) se reservan por el portal de residentes. Horario todos los días: Bloque A 12:00–16:00 · Bloque B 19:00–00:00. Costo: $40.000 CLP · Aforo: 20 personas. Prohibido fumar, decorar muros, usar máquinas de humo o confeti.",
+        piscina:        "La piscina (Fresh Pool) está disponible todos los días de 09:00 a 21:00 hrs, sin costo. Obligatorio: ducharse antes de entrar y usar ropa de baño. Prohibido: alcohol, mascotas, alimentos dentro del agua, piruetas peligrosas, correr por el borde. Menores deben ir con adulto. No circular mojado o descalzo por áreas comunes.",
+        gimnasio:       "El Fluffy Room (gimnasio) está disponible todos los días de 09:00 a 21:00 hrs, sin costo. El uso es bajo responsabilidad exclusiva del residente.",
+        reserva:        "Para reservar quinchos o salas: ingresa al portal de residentes o consulta disponibilidad en recepción. Cancelaciones hasta 12 hrs antes por WhatsApp o correo. Después de ese plazo el arriendo se cobra igual. Para el ingreso de visitas a espacios reservados, entrega la lista de invitados con nombre, apellido, RUT y patente (si vienen en auto).",
+        // ── PROHIBICIONES ────────────────────────────────────────────
+        fumar:          "Prohibido fumar en espacios comunes, ascensores y en el interior del departamento. Solo se puede fumar en terrazas y exteriores usando cenicero. Está estrictamente prohibido arrojar colillas o cenizas por los balcones. Multa: 5 UF.",
+        alcohol:        "No se permite consumir alcohol en los espacios comunes, salvo en espacios arrendados previamente (quinchos o salas). En la piscina está prohibido en todo momento.",
+        // ── SANCIONES ───────────────────────────────────────────────
+        multa:          "Todas las infracciones al reglamento tienen un valor de 5 UF. Proceso: 1.ª infracción → advertencia escrita + multa · 2.ª → reunión con administración + multa · 3.ª → evaluación de término anticipado de contrato. En infracciones reiteradas se restringe el acceso a áreas comunes y se pueden tomar medidas legales.",
+        sanciones:      "Las infracciones al reglamento de Blend Apoquindo se sancionan con 5 UF. El proceso es: 1.ª vez: advertencia + multa · 2.ª vez: reunión + multa · 3.ª vez: posible término de contrato. Los daños a la propiedad los cubre el residente responsable.",
+        // ── PISO SPC ────────────────────────────────────────────────
+        piso:           "Tu departamento tiene piso SPC (Stone Plastic Composite), resistente al agua. Para cuidarlo correctamente: barre o aspira el polvo a diario · limpia semanalmente con mopa húmeda, agua tibia y detergente neutro · trata las manchas de inmediato. Prohibido: ceras, aceites, acetona, jabón negro o limpiadores de vapor. Pon fieltros en las patas de los muebles y siempre levántalos, nunca los arrastres.",
+        limpieza:       "Limpieza del piso SPC de tu depto: Diaria → barrer o aspirar. Semanal → mopa húmeda con detergente neutro. Manchas de aceite/limón: limpiar de inmediato (pueden decolorar). Manchas de tinta o sangre: alcohol diluido unos minutos sin restregar, luego enjuaga. Manchas de óxido: esponja antioxido + agua. Nunca uses ceras, barniz, acetona ni limpiadores de vapor.",
+        // ── CONTACTO ADMINISTRACIÓN ─────────────────────────────────────
+        contacto:       "Para cualquier problema en el departamento o del edificio (agua caliente, filtraciones, averías, etc.), escríbenos a gsilva@largroup.cl y lo resolvemos a la brevedad. También puedes pasar por recepción de lunes a viernes de 09:00 a 18:00 hrs.",
+        // ── GASTOS COMUNES ──────────────────────────────────────────────
+        eecc:           "Los Gastos Comunes de Blend Apoquindo se emiten el día 25 de cada mes y vencen el día 5 del mes siguiente. El pago se realiza a través del portal de residentes o directamente en conserjería. Para consultar tu estado de cuenta o liquidación, acércate a recepción o escribe a gsilva@largroup.cl.",
+        // ── ELECTRODOMÉSTICOS ─────────────────────────────────────────────
+        refrigerador:   "El refrigerador Side by Side de tu departamento tiene estas instrucciones clave: · Al enchufarlo por primera vez, espera 2-3 horas antes de poner alimentos. · Mantén espacio libre de al menos 10 cm en los costados y 7,5 cm por detrás. · No lo instales cerca de cocinas, radiadores u otras fuentes de calor. · Si las puertas quedan desniveladas, ajústalas con la tuerca de nivelación. · Las ampolletas LED las debe cambiar solo el servicio técnico autorizado. Ante cualquier falla llama a gsilva@largroup.cl.",
+        horno:          "Tu horno TEKA SteakMaster tiene estas funciones principales: · STEAKMASTER: calienta hasta 700°C en las placas cerámicas para sellar carnes perfectamente. Siempre usa la parrilla de hierro fundido incluida. · Modos disponibles: ATEMPERAR (20 min a 40°C para llevar la carne a temperatura ambiente), MANUAL (tú controlas los tiempos) y AUTO-ASISTENTE (el horno te guía paso a paso). · PIRÓLISIS: limpieza automática por calor, sin productos químicos. Solo pasa un paño húmedo al terminar. · Para encender: presiona ON/OFF y gira el mando izquierdo hasta la función deseada, confirma con OK. Ante fallas técnicas contacta a gsilva@largroup.cl.",
+        campana:        "La campana extractora TEKA de tu departamento: · Si no funciona: verifica que el cable esté conectado y que llegue tensión al enchufe. · Si no aspira bien o vibra: el filtro de grasa puede estar saturado — límpialo al menos una vez al mes. También puede haber una obstrucción en el conducto de salida. · Si las lámparas no iluminan: reemplaza o aprieta las ampolletas. · Para limpiar el filtro: retíralo soltando los puntos de fijación, lávalo con agua caliente o en lavavajillas (sin detergentes agresivos) y deja secar antes de reinstalar. Para fallas que no puedes resolver, contacta a gsilva@largroup.cl.",
+        encimera:       "Tu encimera vitrocerámica de inducción TEKA funciona así: · Solo funciona con ollas y sartenes de fondo ferromagnético (que el imán las atraiga). Verifica esto antes de comprar utensilios. · El fondo debe ser plano y liso, y cubrir completamente la zona de cocción marcada en el vidrio. No uses ollas con fondo deformado, cóncavo o irregular — pueden dañar el vidrio o el recipiente. · El control es táctil (touch): toca el símbolo de encendido para activarla y selecciona la zona y potencia deseada. · Si la encimera no reconoce tu olla, puede ser que el fondo no tenga suficiente material ferromagnético aunque diga 'apto para inducción'. Ante fallas, contacta a gsilva@largroup.cl.",
+        // ── RESPUESTAS BUILDING MANAGER ─────────────────────────────────────
+        bodega:        "Blend Apoquindo no cuenta con bodegas para los departamentos.",
+        telefono:      "El telefono del edificio es +56 9 8197 0796 (Guillermo Silva). Horario: 09:00 a 18:30 hrs. Fuera de horario hay guardia de 22:00 a 08:00 hrs para emergencias. Tambien escribe a gsilva@largroup.cl.",
+        guardia:       "Contamos con guardia de 22:00 a 08:00 hrs todos los dias. Para emergencias nocturnas llama al +56 9 8197 0796.",
+        emergencia:    "Ante cualquier emergencia: de 22:00 a 08:00 hrs llama al guardia al +56 9 8197 0796. En horario (09:00-18:30) llama al mismo numero. Si hay filtracion, primero cierra las llaves principales del departamento.",
+        filtracion:    "Si tienes filtracion de agua: cierra las llaves principales del departamento. Luego llama al +56 9 8197 0796. De 22:00 a 08:00 hrs atiende el guardia; en horario administrativo el equipo de administracion.",
+        corte_luz:     "Si tienes corte de luz en tu departamento, llama al +56 9 8197 0796. De 22:00 a 08:00 hrs atiende el guardia; en horario de 09:00 a 18:30 hrs el equipo administrativo te ayuda.",
+        proveedores:   "Antes de contratar cualquier tecnico (gasfiter, electricista, etc.), consulta primero con la administracion. Ellos manejan proveedores autorizados. Contacta a Guillermo Silva: +56 9 8197 0796 / gsilva@largroup.cl.",
+        app:           "El edificio usa dos apps: Smarkit Access (llave virtual y envio de codigos QR de invitacion para tus visitas) y Aiphone IXG (citofonia). Solo la administracion puede registrar nuevos residentes. Problemas: gsilva@largroup.cl.",
+        wifi:          "WiFi en areas comunes: Red piso 11 / Clave: abcd1234. Tambien hay red Recepcion / Clave: abcd1234.",
+        cowork:        "Contamos con un espacio cowork disponible para residentes. Para horarios y disponibilidad contacta administracion al +56 9 8197 0796.",
+        airbnb:        "El subarriendo y Airbnb estan estrictamente prohibidos. Si se detecta, implica cancelacion inmediata del contrato mas las multas correspondientes.",
+        queja:         "Para una queja o reclamo formal: libro de novedades en recepcion, o por correo a gsilva@largroup.cl.",
+        salida:        "Para salir del departamento: avisa con 30 dias de anticipacion. Agenda con administracion la fecha de mudanza. El Building Manager hace la inspeccion final. La garantia se devuelve en 30 dias desde la firma del finiquito. Los servicios basicos se calculan proporcional a los ultimos 3 meses y se descuentan de la garantia.",
+        garantia:      "La garantia se devuelve en 30 dias desde que firmes el finiquito. Se descuentan los servicios basicos proporcionales (3 ultimos meses) y cualquier dano detectado en la inspeccion final.",
+        personal:      "Administrador: Guillermo Silva. Horario: 09:00 a 18:30 hrs. Tel: +56 9 8197 0796. Email: gsilva@largroup.cl. No hay recepcionistas. Guardia de seguridad: 22:00 a 08:00 hrs.",
+        mantenimiento: "Para reparaciones o visitas de mantencion, el residente debe estar presente. El personal no puede ingresar sin que estes. Coordina horario al +56 9 8197 0796.",
+        estac_visita2: "Estacionamiento de visitas: nivel -5. De 07:00 a 22:00 hrs pasan por administracion Saba para 4 horas gratis; pasadas esas horas pagan diferencia. De 22:00 a 08:00 hrs el guardia abre las barreras sin cobro.",
+        aireacond:      "El aire acondicionado split de tu departamento (modelo COOL DESIGN MESV): · Tiene reinicio automático: si hay un corte de luz, vuelve a funcionar solo con los ajustes anteriores. · Función Anti-Moho: al apagar desde el modo FRÍO, sigue funcionando a baja potencia para secar la condensación y evitar moho. · Modo SLEEP: aumenta la temperatura 1°C por hora para ahorrar energía mientras duermes (se activa desde el control remoto). · No dejes las persianas en ángulo muy vertical por mucho tiempo — puede gotear agua sobre muebles. · Si aparece el código EC en la pantalla: detectó fuga de refrigerante, llama a servicio técnico. · Para cambiar los filtros o hacer mantención, llama a personal autorizado. Contacto: gsilva@largroup.cl."
+    },
+    en: {
+        acceso:         "Building access is done with your personal PIN. Visitors must be authorized by the resident and registered at the front desk with their ID. Only the contract holder can authorize visitor access.",
+        visitas:        "Guests may stay a maximum of 15 consecutive days per month, no more than 3 times per year. Notify management in advance of how long your guest will stay.",
+        llaves:         "If you forgot your keys or access device: during office hours (09:00–18:00) the fee is UF 1. Outside office hours: UF 3. Only the contract holder can make this request, in person with ID.",
+        capacidad:      "Maximum residents per unit type: Studio: 1 person · 1B1B: 2 people · 2B2B: 3 to 4 people. Guests may not stay more than 15 consecutive days per calendar month.",
+        servicios:      "Each resident is responsible for contracting and paying their own basic services (electricity, water, internet, cable TV). Any billing issues must be resolved directly with the service provider.",
+        modificaciones: "Prohibited: knocking down walls, changing exterior windows or doors, modifying plumbing or electrical systems, installing external A/C, making holes in the apartment, or modifying the building facade.",
+        estacionamiento:"Your parking space is personal and non-transferable: one vehicle per space. Max speed: 20 km/h. Prohibited: storing objects, washing or repairing vehicles, honking to request gate opening. Badly parked vehicles may be removed.",
+        visita_estac:   "Visitor parking is exclusively for guests (tenants may NOT use it). No advance reservations. Maximum 2 simultaneous spaces per unit. Max stay: 5 hours per day. Exceeding this results in a fine of 0.5 UF per day. Vehicles must be registered at reception.",
+        bicicletas:     "Bikes and e-bikes must be kept only in designated bike racks or in your storage unit. Not allowed in elevators or on balconies. Management is not responsible for theft or loss.",
+        delivery:       "Delivery drivers and couriers cannot go up to the floors. Go to reception or the Ecommerce Room (floor 1, across from reception) to pick up your orders. You have a maximum of 15 minutes to collect food orders.",
+        ecommerce:      "The Ecommerce Room is on floor 1, across from reception. Open 24 hours, every day. It has Kubi lockers for all package types. Food orders must be picked up within 15 minutes.",
+        ascensor:       "Use elevators responsibly. Give priority to people with reduced mobility. Children under 12 must be accompanied by an adult. Do not block or manually open doors. In case of failure, use the emergency button and wait for assistance.",
+        mudanza:        "Moving must be coordinated with management at least 48 hours in advance. Permitted hours: Mon–Fri 09:00–18:00 · Sat 10:00–14:00 · Sundays NO moves allowed. Access via basement level -2 only (max truck height: 3.6 m).",
+        basura:         "Garbage goes in closed plastic bags through the chutes. Chute hours: 08:00–22:00. Do not throw glass, cardboard, or large objects in the chutes. Cat litter goes directly to the trash room on floor -2.",
+        reciclaje:      "The building has special closets for recycling plastics, glass, cans, and small cardboard. Large boxes must be left flattened in the trash room.",
+        ruido:          "Social gatherings with moderate noise: permitted Mon–Sun 08:30–21:00. Construction or repair work: Mon–Fri 09:00–18:00 · Sat 10:00–14:00 · Sundays and holidays are prohibited. Violations: 5 UF fine.",
+        mascota:        "Pets require prior management authorization and a deposit. Only domestic pets up to 15 kg allowed (no dangerous breeds or exotic animals). Always on a leash in hallways and elevators. Prohibited in common areas generally. Vaccination is mandatory per Law 21020. Fine for non-compliance: 5 UF.",
+        quincho:        "BBQ areas (Spicy Grill, Tasty Grill, Crispy Grill) are booked via the residents portal. Hours every day: Block A 12:00–16:00 · Block B 19:00–00:00. Cost: CLP $30,000 · Capacity: 20 people. Lights turn off automatically at 00:15 hrs. Cancellations: up to 12 hours before via WhatsApp or email.",
+        sala:           "Multi-purpose rooms (Spark Room, Smooth Room, Clear Room) are booked via the residents portal. Hours every day: Block A 12:00–16:00 · Block B 19:00–00:00. Cost: CLP $40,000 · Capacity: 20 people.",
+        piscina:        "The pool (Fresh Pool) is available every day 09:00–21:00, free of charge. You must shower before entering and wear proper swimwear. No alcohol, pets, or food in the water. Minors must be with an adult. Do not walk wet or barefoot in common areas.",
+        gimnasio:       "The Fluffy Room (gym) is available every day 09:00–21:00, free of charge. Use is at the resident's own risk.",
+        reserva:        "To book BBQ areas or meeting rooms: log into the residents portal or check availability at reception. Cancellations must be made at least 12 hours before via WhatsApp or email. After that deadline, the fee is charged regardless.",
+        fumar:          "Smoking is prohibited in common areas and elevators. You may only smoke on your terrace or outdoors, using an ashtray. Throwing cigarette butts from balconies is strictly forbidden. Fine: 5 UF.",
+        alcohol:        "Alcohol consumption is not permitted in common areas, except in previously rented spaces (BBQ areas or meeting rooms). Prohibited at the pool at all times.",
+        multa:          "All rule violations carry a fine of 5 UF. Process: 1st offense: written warning + fine · 2nd: meeting + fine · 3rd: possible early contract termination. Repeated violations may restrict access to common areas.",
+        sanciones:      "Fines for Blend Apoquindo rule violations are 5 UF each. 1st time: warning + fine · 2nd time: meeting + fine · 3rd time: possible contract termination. Property damage costs are borne by the responsible resident.",
+        piso:           "Your unit has SPC (Stone Plastic Composite) flooring, water-resistant. Care tips: sweep or vacuum daily · clean weekly with damp mop and neutral detergent · treat stains immediately. Never use wax, oil, acetone, or steam cleaners. Protect furniture legs with felt pads and always lift furniture, never drag it.",
+        contacto:       "To contact Blend Apoquindo's management, email us at gsilva@largroup.cl and we will get back to you promptly. You can also visit reception Monday to Friday from 09:00 to 18:00.",
+        eecc:           "Blend Apoquindo's common expenses (HOA fees) are issued on the 25th of each month and due on the 5th of the following month. To check your account status, visit the front desk or the residents portal. For billing questions, contact the building administration directly.",
+        bodega:         "Blend Apoquindo does not have storage units for apartments.",
+        telefono:       "Building contact: +56 9 8197 0796 (Guillermo Silva, manager). Office hours: 09:00-18:30. After hours, a security guard is available 22:00-08:00 every day for emergencies. You can also email gsilva@largroup.cl.",
+        guardia:        "Security guard is available 22:00-08:00, Monday through Monday. For overnight emergencies call +56 9 8197 0796.",
+        emergencia:     "For any emergency: from 22:00 to 08:00 contact the security guard (+56 9 8197 0796). During office hours, call the same number for administration. In case of water leak, first turn off the main water valves before calling.",
+        filtracion:     "If you have a water leak: first turn off the main water valves in your apartment. Then call +56 9 8197 0796. From 22:00 to 08:00 the security guard will assist; during office hours the administration team will help.",
+        corte_luz:      "If you have a power outage in your apartment, call +56 9 8197 0796. From 22:00 to 08:00 the security guard will assist; during office hours (09:00-18:30) call the same number.",
+        proveedores:    "Before hiring any technician or contractor for repairs in your apartment, you must consult with building management first. They manage authorized providers for the building. Contact Guillermo Silva at +56 9 8197 0796 or gsilva@largroup.cl.",
+        app:            "The building uses two apps: Smarkit Access (virtual key for building access) and Aiphone IXG (intercom). Through Smarkit you can send QR codes to your visitors so they can enter without you going downstairs. For app registration or issues, contact building management.",
+        wifi:           "The building has WiFi in common areas. Network: piso 11, password: abcd1234. There is also a Red Recepcion network, password: abcd1234.",
+        cowork:         "Blend Apoquindo has a cowork space available for residents. For hours and availability, contact management at +56 9 8197 0796.",
+        airbnb:         "Subletting and Airbnb are strictly prohibited at Blend Apoquindo. If detected, it results in immediate contract termination plus applicable fines.",
+        queja:          "To file a formal complaint, you have two options: the incident book at reception, or by email to gsilva@largroup.cl.",
+        salida:         "Moving out process: give 30 days notice, schedule move-out date and time with management. The Building Manager will do the final inspection. Security deposit is returned within 30 days of signing the settlement. Basic services are calculated proportionally (last 3 months) and deducted from the deposit.",
+        garantia:       "The security deposit is returned within 30 days of signing the settlement. Basic services (last 3 months proportional) and any damage found in the final inspection will be deducted.",
+        personal:       "Building manager: Guillermo Silva. Office hours: 09:00-18:30. Contact: gsilva@largroup.cl / +56 9 8197 0796. No front desk staff. Security guard available 22:00-08:00.",
+        mantenimiento:  "For any repair or maintenance visit to your apartment, you must be present. Building staff cannot enter without you there. Schedule with management at a convenient time.",
+        estac_visita2:  "Visitor parking is at level -5. From 07:00-22:00, visitors must go through Saba management (level -5) for 4 free hours with discount. After 4 hours they pay the difference. From 22:00-08:00, security guards open barriers at no charge.",
+                refrigerador:   "Your Side by Side refrigerator: Wait 2-3 hours after plugging it in before storing food. Keep at least 10cm clearance on the sides and 7.5cm at the back. Do not place near heat sources. If doors are uneven, adjust using the leveling nut. LED bulbs must be replaced by authorized service only. For any malfunction contact gsilva@largroup.cl.",
+        horno:          "Your TEKA SteakMaster oven main features: · STEAKMASTER: heats ceramic plates up to 700°C for perfect meat searing. Always use the included cast iron grill. · Modes: TEMPER (20 min at 40°C to bring meat to room temperature), MANUAL (you control timing), AUTO-ASSISTANT (step-by-step guidance). · PYROLYSIS: automatic heat-cleaning, no chemicals needed. Just wipe residue with a damp cloth after cycle. · To turn on: press ON/OFF, turn left dial to desired function, confirm with OK. For technical failures contact gsilva@largroup.cl.",
+        campana:        "Your TEKA extractor hood: · Not working: check cable connection and power socket. · Not extracting enough or vibrating: grease filter may be saturated — clean at least once a month. May also be a conduit obstruction. · Lamps not working: replace or tighten bulbs. · To clean filter: remove by pressing fastening points, wash in hot water or dishwasher (no aggressive detergents), let dry before reinstalling. For unresolved issues contact gsilva@largroup.cl.",
+        encimera:       "Your TEKA induction hob: · Only works with pots and pans with ferromagnetic (magnet-attracting) bottoms. · The base must be flat and smooth, and must fully cover the cooking zone marked on the glass. Do not use deformed or wavy-bottomed cookware — it can damage the glass. · Touch control: tap the power symbol to activate, then select zone and power level. · If the hob doesn't detect your pot, its ferromagnetic material may be insufficient even if labeled 'induction-ready'. For failures contact gsilva@largroup.cl.",
+        aireacond:      "Your split air conditioner (COOL DESIGN MESV model): · Auto-restart: after power outage it restarts automatically with previous settings. · Anti-mold: when switching off from COOL mode, it runs briefly at low power to dry condensation and prevent mold. · SLEEP mode: increases temperature 1°C per hour for energy savings while sleeping (remote control only). · Do not leave louvres at a very vertical angle for long — condensation may drip on furniture. · EC code on display means refrigerant leak detected — call technical service. · Filter cleaning and maintenance must be done by authorized personnel. Contact gsilva@largroup.cl.",
+        limpieza:       "SPC floor cleaning: Daily → sweep or vacuum. Weekly → damp mop with neutral detergent. Oil/lemon stains: clean immediately (can discolor). Ink or blood stains: diluted alcohol for a few minutes without scrubbing, then rinse. Rust: anti-rust sponge + water. Never use wax, varnish, acetone, or steam cleaners.",
+    }
+};
+
+const i18n = {
+    es: {
+        resident:    "Residente",
+        admin:       "Administración",
+        online:      "En línea · atención inmediata",
+        urgent:      "Urgente",
+        yourDepto:   "Tu depto:",
+        welcomeMsg:  `¡Hola! Qué gusto saludarte 😊. Bienvenido/a a la comunidad de <strong>Blend Apoquindo</strong>.<br><br>Estoy aquí para ayudarte con cualquier duda sobre el reglamento, áreas comunes, mudanzas o gastos comunes.<br><br>Para dejar registro, <strong>¿me indicas el número de tu departamento arriba a la derecha?</strong> ¿En qué te puedo ayudar hoy?`,
+        noAnswer:    "Esa consulta no está en mi base de información del reglamento. Puedes intentarlo con otras palabras, o si prefieres atención directa, escríbenos a <strong><a href='mailto:gsilva@largroup.cl' style='color:#000;text-decoration:underline'>gsilva@largroup.cl</a></strong> y te respondemos a la brevedad.",
+        urgentNote:  "⚠️ Esta consulta fue marcada como urgente.",
+        histLoaded:  "💬 Conversación anterior recuperada. ¿En qué más te puedo ayudar?",
+    },
+    en: {
+        resident:    "Resident",
+        admin:       "Admin Panel",
+        online:      "Online · immediate attention",
+        urgent:      "Urgent",
+        yourDepto:   "Your unit:",
+        welcomeMsg:  `Hello! Welcome to <strong>Blend Apoquindo</strong> 😊.<br><br>I'm here to help with any questions about the building rules, common areas, moving, or HOA fees.<br><br>To keep a record, <strong>could you enter your unit number above on the right?</strong> How can I help you today?`,
+        noAnswer:    "That question isn't in my building regulations database. Feel free to rephrase, or for direct assistance email us at <strong><a href='mailto:gsilva@largroup.cl' style='color:#000;text-decoration:underline'>gsilva@largroup.cl</a></strong> and we'll get back to you shortly.",
+        urgentNote:  "⚠️ This message was marked as urgent.",
+        histLoaded:  "💬 Previous conversation loaded. How can I help you further?",
+    }
+};
+
+
+// ════════════════════════════════════════════════════════════════
+// ESTADO GLOBAL
+// ════════════════════════════════════════════════════════════════
+let currentLang  = 'es';
+let isUrgent     = false;
+let currentDepto = '';
+
+const logsConsultas = [
+    { residente: "Depto 1202", query: "¿Hasta qué hora se puede usar el quincho los viernes?", categoria: "Horarios / Áreas Comunes", fecha: "Hoy, 18:42",  precision: "Resuelto",    urgente: false },
+    { residente: "Anónimo",    query: "¿Cómo pido el reglamento sobre tenencia de mascotas?",  categoria: "Reglamento Interno",      fecha: "Hoy, 17:15",  precision: "Resuelto",    urgente: false },
+    { residente: "Depto 701",  query: "No entiendo el cobro de la caldera en el gasto común",  categoria: "Gastos Comunes (EECC)",    fecha: "Ayer, 14:02", precision: "No Resuelto", urgente: true  },
+    { residente: "Anónimo",    query: "¿Se permiten mudanzas los días domingos?",              categoria: "Mudanzas / Logística",     fecha: "Ayer, 09:11", precision: "Resuelto",    urgente: false },
+];
+
+
+var feedbackNegativo = [];
+
+const topicosData = [
+    { nombre: "Gastos Comunes y Vencimientos",  porcentaje: 45, total: 54 },
+    { nombre: "Quinchos, Piscina y Ruidos",     porcentaje: 30, total: 36 },
+    { nombre: "Tenencia de Mascotas",           porcentaje: 15, total: 18 },
+    { nombre: "Mudanzas y Ascensor",            porcentaje: 10, total: 12 },
+];
+
+
+// ════════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════════
+window.onload = () => {
+    renderDashboardAdmin();
+    renderWelcome();
+    actualizarEstadoIA();
+    var saved = localStorage.getItem('resibot_groq_key');
+    var ki = document.getElementById('input-groq-key');
+    if (saved && ki) ki.value = saved;
+};
+
+function norm(t) {
+    return t.toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[?!.,;:()'"-]/g, ' ')
+        .replace(/\s+/g, ' ').trim();
+}
+
+function tiene(n) {
+    var palabras = Array.prototype.slice.call(arguments, 1);
+    return palabras.some(function(p) { return n.indexOf(p) !== -1; });
+}
+
+function detectarRespuesta(texto) {
+    var base = baseConocimiento[currentLang];
+    var n = norm(texto);
+
+    // ─── SALUDOS / CORTESÍA ────────────────────────────────────────────────
+    if (tiene(n, 'hola', 'buenos dias', 'buenas tardes', 'buenas noches', 'buen dia'))
+        return { respuesta: (currentLang === 'es')
+            ? 'Hola! 😊 En qué te puedo ayudar hoy? Puedo resolver dudas sobre quinchos, mascotas, mudanzas, estacionamientos, basura, ruidos y mucho más.'
+            : 'Hello! 😊 How can I help you today? I can answer questions about BBQ areas, pets, moving, parking, garbage, noise and more.',
+            categoria: 'Saludo' };
+    if (tiene(n, 'gracias', 'muchas gracias', 'thanks', 'thank you'))
+        return { respuesta: (currentLang === 'es')
+            ? '¡Con gusto! 😊 Si tienes otra duda, aquí estoy.'
+            : 'You\'re welcome! 😊 Feel free to ask if you have any other questions.',
+            categoria: 'Saludo' };
+
+    // ─── DETECCIÓN DE CONTEXTO ─────────────────────────────────────────────
+    // 'estacio' captura typos como "estacioamiento" además de "estacionamiento"
+    var mencionaEstac  = tiene(n, 'estacionamiento', 'parking', 'estacionar', 'aparcar', 'estacio');
+    var mencionaVisita = tiene(n, 'visita', 'invitado');
+    var mencionaMascota = tiene(n, 'perro', 'gato', 'mascota', 'mascotas', 'animal', 'dog', 'cat', 'pet', 'pets');
+    var mencionaPiscina = tiene(n, 'piscina', 'pileta', 'nadar', 'fresh pool', 'pool', 'swim', 'swimming');
+
+    // ─── 1. ESTACIONAMIENTO DE VISITAS ────────────────────────────────────
+    if ((mencionaEstac && mencionaVisita) ||
+        tiene(n, 'estacionamiento de visita', 'parking de visita',
+                  'parking para visita', 'mi visita en el estacionamiento',
+                  'visitas en el estacionamiento'))
+        return { respuesta: base.visita_estac, categoria: 'Estacionamientos' };
+
+    // ─── 2. LLAVES / ACCESO DE EMERGENCIA ─────────────────────────────────
+    if (tiene(n, 'olvide', 'olvid', 'perdi la llave', 'perdi mi llave', 'perdi mis llaves',
+                  'perdi el pin', 'no puedo entrar', 'no puedo abrir',
+                  'olvide mi llave', 'olvide el pin', 'dispositivo de acceso',
+                  'abrir mi depto', 'abrir el depto',
+                  'abrir el departamento', 'abrir mi departamento',
+                  'pueden abrir', 'puede abrir', 'abrir la puerta del depto',
+                  'me quede sin llave', 'me quede afuera', 'quede afuera',
+                  'locked out', 'lost my key', 'forgot my key'))
+        return { respuesta: base.llaves, categoria: 'Acceso / Seguridad' };
+
+    // ─── 3. VISITAS AL DEPARTAMENTO ───────────────────────────────────────
+    // Solo si NO hay contexto de estacionamiento
+    if (!mencionaEstac && (
+        tiene(n, 'trabajadora', 'nana', 'empleada', 'autorizar visita',
+                  'registrar visita', 'como funcionan las visitas',
+                  'normas de visitas', 'reglamento de visitas',
+                  'politica de visitas', 'reglas de visitas',
+                  'pareja', 'pololo', 'polola', 'novio', 'novia',
+                  'vive conmigo', 'quedarse conmigo', 'mi pareja puede',
+                  'puede vivir mi') ||
+        (mencionaVisita && tiene(n, 'cuantos dias', 'dias puede estar',
+                                    'dias puede quedarse', 'cuantas noches',
+                                    'cuanto tiempo puede quedarse', 'puede dormir',
+                                    'puede vivir', 'autorizar', 'registrar',
+                                    'familiar', 'amigo', 'puede venir')) ||
+        (mencionaVisita && tiene(n, 'dias', 'noches', 'puede venir', 'puede estar', 'puede quedar', 'se puede quedar', 'norma', 'reglamento', 'registrar', 'autorizar', 'permiso') &&
+                         !tiene(n, 'velocidad', 'hora', 'horario', 'ruido',
+                                'quincho', 'piscina', 'gimnasio', 'basura',
+                                'mudanza', 'ascensor', 'delivery', 'multa', 'mantenimiento'))))
+        return { respuesta: base.visitas, categoria: 'Acceso / Seguridad' };
+
+    // ─── 4. ACCESO / PIN ──────────────────────────────────────────────────
+    if (tiene(n, 'pin', 'clave de acceso', 'codigo de acceso', 'como entro',
+                  'como ingreso', 'como accedo', 'puerta del edificio',
+                  'entrada al edificio', 'acceso al edificio'))
+        return { respuesta: base.acceso, categoria: 'Acceso / Seguridad' };
+
+    // ─── 5. CAPACIDAD ─────────────────────────────────────────────────────
+    if (tiene(n, 'cuantas personas', 'cuantos residentes', 'maximo de personas',
+                  'cuantos pueden vivir', 'cuantos en el depto',
+                  'limite de personas', 'pueden vivir', 'cuantos pueden'))
+        return { respuesta: base.capacidad, categoria: 'Reglamento Interno' };
+
+    // ─── 6. SERVICIOS BÁSICOS ─────────────────────────────────────────────
+    if (tiene(n, 'contratar internet', 'contratar wifi', 'internet a mi nombre',
+                  'internet del edificio', 'electricidad', 'cuenta de luz',
+                  'cuenta de agua', 'servicio basico', 'cable tv',
+                  'contratar internet', 'contratar wifi', 'corte de luz',
+                  'corte de agua'))
+        return { respuesta: base.servicios, categoria: 'Servicios Basicos' };
+
+    // ─── 7. MODIFICACIONES / OBRAS ────────────────────────────────────────
+    // FIX: agrega 'obras', 'obra', 'renovacion', 'construccion', 'instalar'
+    if (tiene(n, 'modificar', 'modificacion', 'derribar muro', 'perforacion',
+                  'perforar', 'cambiar ventana', 'cambiar puerta',
+                  'obra en el departamento', 'obra en el depto',
+                  'obras en el', 'obras en mi', 'hacer obras',
+                  'puedo hacer obras', 'puedo hacer obra',
+                  'instalacion electrica', 'instalacion de gas',
+                  'instalar', 'poner una lavadora', 'lavadora en',
+                  'antena en', 'poner en el balcon', 'adicionar en el balcon',
+                  'cambiar la fachada', 'modificar la fachada',
+                  'renovar el depto', 'construccion', 'albanieria'))
+        return { respuesta: base.modificaciones, categoria: 'Modificaciones / Obras' };
+
+    // ─── 8. BICICLETAS ────────────────────────────────────────────────────
+    if (tiene(n, 'bicicleta', 'bici', 'bike', 'ebike', 'bicicletero',
+                  'donde dejo mi bici', 'donde guardo mi bici', 'ciclovias'))
+        return { respuesta: base.bicicletas, categoria: 'Bicicletas' };
+
+    // ─── 9. ESTACIONAMIENTO GENERAL ───────────────────────────────────────
+    // FIX: agrega 'velocidad', 'manejar', 'conducir'
+    if (mencionaEstac ||
+        tiene(n, 'garaje', 'donde dejo el auto', 'lavar el auto',
+                  'auto en el edificio', 'vehiculo', 'velocidad',
+                  'velocidad maxima', 'limite de velocidad',
+                  'a que velocidad', 'manejar dentro', 'conducir dentro',
+                  'velocidad permitida'))
+        return { respuesta: base.estacionamiento, categoria: 'Estacionamientos' };
+
+    // ─── 10. DELIVERY ─────────────────────────────────────────────────────
+    if (tiene(n, 'delivery', 'rappi', 'uber eats', 'pedido de comida',
+                  'empresa de reparto', 'repartidor', 'subir el delivery',
+                  'bajar a buscar', 'pedir comida', 'komida', 'komidas', 'pedido llego',
+                  'llego mi pedido', 'cornershop', 'pedidos ya',
+                  'puede subir el'))
+        return { respuesta: base.delivery, categoria: 'Delivery / Ecommerce' };
+
+    // ─── 11. ECOMMERCE / ENCOMIENDAS ──────────────────────────────────────
+    if (tiene(n, 'encomienda', 'paquete', 'kubi', 'locker', 'casillero',
+                  'sala de ecommerce', 'ecommerce', 'amazon', 'mercado libre',
+                  'retiro de paquete', 'retiro de encomienda',
+                  'donde retiro', 'donde recibo'))
+        return { respuesta: base.ecommerce, categoria: 'Delivery / Ecommerce' };
+
+    // ─── 12. ASCENSORES ───────────────────────────────────────────────────
+    if (!mencionaMascota &&
+        tiene(n, 'ascensor', 'elevador', 'subir en ascensor',
+                  'ascensor no funciona', 'falla del ascensor',
+                  'ascensor bloqueado', 'ascensor atrapado', 'ascensor roto'))
+        return { respuesta: base.ascensor, categoria: 'Ascensores' };
+
+    // ─── 13. MUDANZAS ─────────────────────────────────────────────────────
+    if (tiene(n, 'mudanza', 'mudar', 'mudarme', 'camion de mudanza',
+                  'horario de mudanza', 'coordinar mudanza', 'traer muebles',
+                  'me mudo', 'quiero mudarme', 'dia de mudanza',
+                  'cuando puedo mudar', 'fecha de mudanza',
+                  'moving', 'move in', 'move out', 'moving day', 'moving hours'))
+        return { respuesta: base.mudanza, categoria: 'Mudanzas / Logistica' };
+
+    // ─── 14. RECICLAJE ────────────────────────────────────────────────────
+    if (tiene(n, 'reciclar', 'reciclaje', 'carton', 'vidrio', 'plastico',
+                  'donde reciclo', 'donde dejo el carton', 'bolsa de reciclaje',
+                  'punto limpio', 'como reciclo'))
+        return { respuesta: base.reciclaje, categoria: 'Basura / Reciclaje' };
+
+    // ─── 15. BASURA ───────────────────────────────────────────────────────
+    if (tiene(n, 'basura', 'ducto', 'shaft', 'arena de gato', 'donde boto',
+                  'tirar basura', 'sacar la basura', 'horario de basura',
+                  'bajar la basura', 'bolsa de basura', 'residuos'))
+        return { respuesta: base.basura, categoria: 'Basura / Reciclaje' };
+
+    // ─── 16. MASCOTAS (antes de ruidos para evitar "mi gato hace ruido" → ruido) ──
+    // FIX: sube mascotas ANTES de ruidos para que "mi gato/perro" se detecte bien
+    if (mencionaMascota ||
+        tiene(n, 'puedo tener mascota', 'registro de mascota',
+                  'autorizar mascota', 'correa del perro',
+                  'caca del perro', 'tengo mascotas', 'se permiten mascotas',
+                  'policy de mascotas', 'politica de mascotas',
+                  'can i have a dog', 'can i have a cat', 'can i have a pet',
+                  'pets allowed', 'are pets allowed', 'bring my dog', 'bring my cat'))
+        return { respuesta: base.mascota, categoria: 'Mascotas' };
+
+    // ─── CONTACTO ─────────────────────────────────────────────────────────
+    if (tiene(n, 'contacto', 'correo', 'email', 'mail', 'numero de telefono',
+                  'numero de la administracion', 'contactar administracion',
+                  'contactar con administracion', 'hablar con administracion',
+                  'hablar con alguien', 'necesito contactar', 'necesito comunicarme',
+                  'quien me puede ayudar', 'a quien llamo', 'a quien contacto',
+                  'numero del edificio', 'telefono del edificio', 'hablar con el edificio',
+                  'datos de contacto', 'informacion de contacto',
+                  'como contacto', 'como me comunico', 'como llego a',
+                  'numero de conserjeria', 'conserje', 'administracion del edificio',
+                  'agua caliente', 'sin agua caliente', 'no sale agua caliente',
+                  'caldera', 'calefaccion del agua', 'agua fria', 'no hay agua caliente',
+                  'problema en el depto', 'desperfecto', 'averia', 'se rompio',
+                  'contact', 'administration', 'how to reach', 'reach the admin',
+                  'admin email', 'management contact'))
+        return { respuesta: base.contacto, categoria: 'Contacto / Administración' };
+
+    // ─── GASTOS COMUNES ───────────────────────────────────────────────────
+    if (tiene(n, 'gastos comunes', 'gasto comun', 'eecc', 'fee comun', 'hoa fee',
+                  'cuando se pagan', 'cuando vencen', 'cuando pagar', 'cuanto pago de',
+                  'liquidacion', 'estado de cuenta', 'cobro mensual', 'cobro del edificio',
+                  'cuota mensual', 'pagar el edificio'))
+        return { respuesta: base.eecc, categoria: 'Gastos Comunes' };
+
+    // ── ELECTRODOMÉSTICOS ─────────────────────────────────────────────────
+    if (tiene(n, 'refrigerador', 'nevera', 'heladera', 'congelador', 'freezer',
+                  'temperatura del refrigerador', 'el refrigerador no enfria',
+                  'puerta del refrigerador', 'refrigerador no funciona',
+                  'agua en el refrigerador', 'compartimento'))
+        return { respuesta: base.refrigerador, categoria: 'Electrodomesticos / Refrigerador' };
+
+    if (tiene(n, 'horno', 'steakmaster', 'pirolisis', 'encender el horno',
+                  'como uso el horno', 'asar carne', 'horno no calienta',
+                  'carne en el horno', 'atemperar', 'modo horno', 'funciones del horno'))
+        return { respuesta: base.horno, categoria: 'Electrodomesticos / Horno' };
+
+    if (tiene(n, 'campana', 'extractor', 'campana extractora', 'humo en la cocina',
+                  'olor en la cocina', 'campana no funciona', 'filtro de la campana',
+                  'campana hace ruido', 'campana vibra', 'luz de la campana'))
+        return { respuesta: base.campana, categoria: 'Electrodomesticos / Campana' };
+
+    if (tiene(n, 'encimera', 'vitroceramica', 'cocina de induccion', 'induccion',
+                  'hornilla', 'que ollas usar', 'que ollas puedo usar', 'que ollas', 'ollas compatibles',
+                  'encimera no enciende', 'la cocina no funciona', 'no calienta la cocina'))
+        return { respuesta: base.encimera, categoria: 'Electrodomesticos / Encimera' };
+
+    if (tiene(n, 'aire acondicionado', 'climatizador', 'split',
+                  'como uso el aire', 'el aire no enfria', 'el aire no calienta',
+                  'el split no enfria', 'el clima no enfria', 'no enfria el depto',
+                  'control del aire', 'modo frio', 'modo calor', 'modo heat',
+                  'filtro del aire', 'codigo ec', 'el aire hace ruido', 'el aire gotea',
+                  'el aire no funciona', 'air kondicionado', 'air acondicionado',
+                  'acondicionado no', 'calefaccion del depto', 'como funciona el clima',
+                  'air conditioning', 'ac unit', 'the ac ', 'ac not', 'heat mode'))
+        return { respuesta: base.aireacond, categoria: 'Electrodomesticos / Aire Acondicionado' };
+
+
+        // ─── 17. RUIDOS ───────────────────────────────────────────────────────
+    if (tiene(n, 'ruido', 'ruidos', 'musica alta', 'musica fuerte', 'musica muy fuerte',
+                  'fiesta', 'bulla', 'horario de ruido', 'reparacion', 'taladro',
+                  'vecino hace ruido', 'vecino con musica', 'vecino ruidoso',
+                  'vecino escucha', 'molestan con ruido', 'ruido del vecino',
+                  'hasta que hora se puede hacer ruido',
+                  'hasta que hora puedo hacer ruido', 'silencio',
+                  'vecinos ruidosos', 'ruido molesto', 'escucha musica',
+                  'noise', 'loud music', 'noisy neighbor'))
+        return { respuesta: base.ruido, categoria: 'Ruidos / Convivencia' };
+
+    // ─── 18. PISCINA (antes de checks genéricos) ──────────────────────────
+    // Si también menciona mascota, piscina gana (responde específicamente)
+    if (mencionaPiscina ||
+        tiene(n, 'horario de la piscina', 'usar la piscina',
+                  'reglas de la piscina', 'me puedo baniar', 'bano en la piscina'))
+        return { respuesta: base.piscina, categoria: 'Areas Comunes / Piscina' };
+
+    // ─── 19. QUINCHOS ─────────────────────────────────────────────────────
+    if (tiene(n, 'quincho', 'quinchos', 'kincho', 'quincoh', 'quinco',
+                  'grill', 'bbq', 'asado', 'asao', 'parrilla',
+                  'hacer un asado', 'hacer asao', 'reservar quincho',
+                  'cuanto cuesta el quincho', 'horario del quincho',
+                  'aforo del quincho', 'spicy', 'tasty', 'crispy',
+                  'salon de eventos', 'sala de eventos'))
+        return { respuesta: base.quincho, categoria: 'Areas Comunes / Quinchos' };
+
+    // ─── 20. SALAS MULTIUSOS ──────────────────────────────────────────────
+    if (tiene(n, 'sala multiuso', 'sala de reuniones', 'salon', 'spark room',
+                  'smooth room', 'clear room', 'reservar sala',
+                  'cuanto cuesta la sala', 'horario de la sala',
+                  'sala de eventos'))
+        return { respuesta: base.sala, categoria: 'Areas Comunes / Salas' };
+
+    // ─── 21. GIMNASIO ─────────────────────────────────────────────────────
+    if (tiene(n, 'gimnasio', 'gym', 'fluffy room', 'ejercicio', 'fitness',
+                  'horario del gimnasio', 'usar el gimnasio', 'pesas',
+                  'cardio', 'entrenamiento'))
+        return { respuesta: base.gimnasio, categoria: 'Areas Comunes / Gimnasio' };
+
+    // ─── 22. RESERVAS GENERALES ───────────────────────────────────────────
+    if (tiene(n, 'como reservo', 'como reservar',
+                  'arrendar el quincho', 'arrendar la sala',
+                  'disponibilidad',
+                  'cancelar reserva', 'portal de residentes', 'cuanto cuesta reservar',
+                  'cuanto cuesta el quincho', 'cuanto cuesta la sala',
+                  'costo de reserva', 'cuanto sale la reserva',
+                  'tarifa del quincho', 'tarifa de la sala', 'aforo'))
+        return { respuesta: base.reserva, categoria: 'Reservas / Areas Comunes' };
+
+    // ─── 23. FUMAR ────────────────────────────────────────────────────────
+    if (tiene(n, 'fumar', 'cigarro', 'cigarrillo', 'colilla', 'tabaco',
+                  'puedo fumar', 'se puede fumar', 'donde fumo', 'fumar en'))
+        return { respuesta: base.fumar, categoria: 'Prohibiciones' };
+
+    // ─── 24. ALCOHOL ──────────────────────────────────────────────────────
+    if (tiene(n, 'alcohol', 'cerveza', 'vino', 'bebidas alcoholicas',
+                  'se puede tomar', 'puedo tomar bebidas', 'trago',
+                  'beber en'))
+        return { respuesta: base.alcohol, categoria: 'Prohibiciones' };
+
+    // ─── 25. SANCIONES / MULTAS ───────────────────────────────────────────
+    if (tiene(n, 'multa', 'sancion', 'infraccion', 'me pueden multar',
+                  'consecuencias', 'penalizacion', 'me van a multar',
+                  'cuanto es la multa', 'cuanto me cobran', 'que pasa si hago', 'que pasa si no pago', 'que pasa si incumplo',
+                  'que consecuencias', 'me van a cobrar'))
+        return { respuesta: base.multa, categoria: 'Sanciones' };
+
+    // ─── 26. PISO SPC ─────────────────────────────────────────────────────
+    if (tiene(n, 'se rayo el piso', 'mancha en el piso', 'como cuido el piso',
+                  'piso flotante', 'danio en el piso', 'danio al piso',
+                  'vinilo', 'spc', 'el piso se', 'piso rayado',
+                  'golpe en el piso', 'abollado el piso'))
+        return { respuesta: base.piso, categoria: 'Mantencion / Piso SPC' };
+
+    // ─── 27. LIMPIEZA DEL PISO ────────────────────────────────────────────
+    // FIX: agrega 'cloro', 'lejia', 'detergente', 'producto para'
+    if (tiene(n, 'limpiar el piso', 'limpieza del piso', 'trapear', 'mopa',
+                  'como limpio el piso', 'detergente para el piso',
+                  'aspirar el piso', 'cloro', 'lejia', 'lavandina',
+                  'producto para el piso', 'limpiar con',
+                  'que uso para limpiar', 'que producto uso'))
+        return { respuesta: base.limpieza, categoria: 'Mantencion / Piso SPC' };
+
+    // ── RESPUESTAS BUILDING MANAGER ─────────────────────────────────────
+    if (tiene(n, 'bodega', 'bodegas', 'storage', 'donde guardo mis cosas', 'tengo bodega', 'hay bodegas'))
+        return { respuesta: base.bodega, categoria: 'Bodegas' };
+
+    if (tiene(n, 'filtracion', 'gotea el techo', 'gotea agua del techo', 'humedad en el techo',
+                  'mancha de agua', 'agua en el techo', 'cano roto', 'tuberia rota', 'water leak'))
+        return { respuesta: base.filtracion, categoria: 'Emergencias' };
+
+    if (tiene(n, 'corte de luz', 'se fue la luz', 'se me fue la luz', 'sin luz en el depto',
+                  'se corto la luz', 'no tengo luz', 'apago la luz', 'no hay electricidad',
+                  'power outage', 'se fue el poder'))
+        return { respuesta: base.corte_luz, categoria: 'Emergencias' };
+
+    if (tiene(n, 'guardia', 'seguridad nocturna', 'guardia de noche', 'emergencia de noche',
+                  'fuera de horario', 'en la noche a quien llamo'))
+        return { respuesta: base.guardia, categoria: 'Emergencias' };
+
+    if (tiene(n, 'guillermo', 'gsilva', 'horario del administrador', 'horario de administracion',
+                  'cuando atiende administracion', 'a que hora abren', 'horario de atencion',
+                  'telefono del administrador', 'telefono de administracion', 'numero del administrador',
+                  'celular del admin', 'quien es el administrador', 'datos del administrador',
+                  'datos de contacto del admin', 'info del administrador'))
+        return { respuesta: base.personal, categoria: 'Contacto / Personal' };
+
+    if (tiene(n, 'tecnico', 'gasfiter', 'electricista', 'plomero', 'contratista',
+                  'proveedor', 'puedo contratar', 'quien repara', 'para reparar'))
+        return { respuesta: base.proveedores, categoria: 'Reparaciones' };
+
+    if (tiene(n, 'smarkit', 'aiphone', 'llave virtual', 'app del edificio', 'qr de invitacion',
+                  'codigo qr visita', 'qr para mi visita', 'como invito a mi visita',
+                  'aplicacion del edificio', 'citofonia', 'como uso la app'))
+        return { respuesta: base.app, categoria: 'App / Portal' };
+
+    if (tiene(n, 'wifi', 'wifi del edificio', 'red wifi', 'clave del wifi', 'contrasena wifi',
+                  'password wifi', 'internet en areas comunes', 'wifi en comun',
+                  'hay internet en el edificio', 'hay wifi en el edificio'))
+        return { respuesta: base.wifi, categoria: 'WiFi' };
+
+    if (tiene(n, 'cowork', 'sala de trabajo', 'espacio de trabajo', 'trabajo desde el edificio'))
+        return { respuesta: base.cowork, categoria: 'Amenidades' };
+
+    if (tiene(n, 'airbnb', 'subarriendo', 'subarrendar', 'arrendar mi depto a otro',
+                  'turistas en mi depto', 'booking mi depto', 'rentar en airbnb'))
+        return { respuesta: base.airbnb, categoria: 'Politicas' };
+
+    if (tiene(n, 'queja formal', 'reclamo formal', 'libro de novedades', 'como me quejo',
+                  'donde reclamo', 'poner una queja', 'quiero quejarme', 'complaint'))
+        return { respuesta: base.queja, categoria: 'Quejas' };
+
+    if (tiene(n, 'proceso de salida', 'cuando me voy del depto', 'me voy del departamento',
+                  'termino mi contrato', 'me voy del edificio', 'check out', 'checkout del depto',
+                  'cuanto tiempo de aviso', 'aviso de salida', 'finiquito', 'dias de anticipacion',
+                  'cuando aviso que me voy', 'quiero salir del depto', 'terminar contrato',
+                  'vencimiento del contrato'))
+        return { respuesta: base.salida, categoria: 'Proceso de Salida' };
+
+    if (tiene(n, 'garantia', 'devolucion de garantia', 'cuando me devuelven la garantia',
+                  'cuando devuelven el deposito', 'deposito de arriendo', 'deposit return'))
+        return { respuesta: base.garantia, categoria: 'Garantia' };
+
+    if (tiene(n, 'visita de mantencion', 'visita de mantenimiento al depto',
+                  'puede entrar personal sin mi', 'debo estar presente', 'tecnico a mi depto',
+                  'mantencion al departamento', 'cuando viene mantencion'))
+        return { respuesta: base.mantenimiento, categoria: 'Mantencion' };
+
+    return null;
+}
+
+function setLang(lang) {
+    currentLang = lang;
+    document.getElementById('lang-es').className = 'lang-btn ' + (lang === 'es' ? 'active' : 'inactive');
+    document.getElementById('lang-en').className = 'lang-btn ' + (lang === 'en' ? 'active' : 'inactive');
+
+    document.querySelectorAll('[data-t]').forEach(el => {
+        const key = el.getAttribute('data-t');
+        if (i18n[lang][key]) el.textContent = i18n[lang][key];
+    });
+
+    const inp = document.getElementById('input-query');
+    inp.placeholder = inp.getAttribute('data-placeholder-' + lang) || '';
+
+    // Recarga el chat con el idioma si el depto no tiene historial cargado
+    if (!currentDepto) {
+        document.getElementById('chat-messages').innerHTML = '';
+        renderWelcome();
+    }
+}
+
+function switchView(view) {
+    const userSec  = document.getElementById('view-user');
+    const adminSec = document.getElementById('view-admin');
+    const btnUser  = document.getElementById('btn-view-user');
+    const btnAdmin = document.getElementById('btn-view-admin');
+    if (view === 'user') {
+        userSec.classList.remove('hidden');
+        adminSec.classList.add('hidden');
+        btnUser.className  = "px-3 py-1.5 rounded-lg text-xs font-semibold transition btn-active";
+        btnAdmin.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition btn-inactive";
+    } else {
+        userSec.classList.add('hidden');
+        adminSec.classList.remove('hidden');
+        btnAdmin.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition btn-active";
+        btnUser.className  = "px-3 py-1.5 rounded-lg text-xs font-semibold transition btn-inactive";
+    }
+}
+
+function loginAdmin() {
+    const user = document.getElementById("admin-user").value.trim();
+    const pass = document.getElementById("admin-pass").value.trim();
+    if (user === ADMIN_USER && pass === ADMIN_PASS) {
+        document.getElementById("admin-login").classList.add("hidden");
+        document.getElementById("admin-dashboard").classList.remove("hidden");
+    } else {
+        mostrarToast("❌ Credenciales incorrectas");
+    }
+}
+
+function toggleUrgency() {
+    isUrgent = !isUrgent;
+    const btn = document.getElementById('urgency-toggle');
+    btn.classList.toggle('active', isUrgent);
+}
+
+function storageKey(depto) {
+    return `blend_chat_depto_${depto}`;
+}
+
+function cargarHistorial(depto) {
+    try {
+        return JSON.parse(localStorage.getItem(storageKey(depto))) || [];
+    } catch { return []; }
+}
+
+function guardarMensaje(depto, sender, texto) {
+    if (!depto) return;
+    let hist = cargarHistorial(depto);
+    hist.push({ sender, texto, ts: new Date().toISOString() });
+    if (hist.length > MAX_HISTORIAL) hist = hist.slice(-MAX_HISTORIAL);
+    localStorage.setItem(storageKey(depto), JSON.stringify(hist));
+}
+
+function onDeptoChange() {
+    const nuevo = document.getElementById('input-depto-opcional').value.trim();
+    if (nuevo === currentDepto) return;
+    currentDepto = nuevo;
+    if (!nuevo) return;
+
+    const hist = cargarHistorial(nuevo);
+    if (hist.length === 0) return;
+
+    // Limpia y recarga el chat con el historial del depto
+    const container = document.getElementById('chat-messages');
+    container.innerHTML = '';
+    renderWelcome(false);
+
+    hist.forEach(m => appendMessage(m.texto, m.sender, false));
+
+    // Aviso visual
+    const aviso = document.createElement('div');
+    aviso.className = 'text-center text-[11px] text-gray-400 py-2';
+    aviso.textContent = i18n[currentLang].histLoaded;
+    container.appendChild(aviso);
+    container.scrollTop = container.scrollHeight;
+}
+
+function buscarHistorialDepto() {
+    const depto = document.getElementById('buscar-depto-admin').value.trim();
+    const resultEl = document.getElementById('depto-history-result');
+    if (!depto) { resultEl.textContent = 'Ingresa un número de depto.'; return; }
+
+    const hist = cargarHistorial(depto);
+    if (hist.length === 0) {
+        resultEl.innerHTML = `<span class="text-gray-400">Sin historial para Depto ${depto}.</span>`;
+        return;
+    }
+
+    resultEl.innerHTML = hist.map(m => `
+        <div class="flex gap-2 items-start py-1 border-b border-gray-100 last:border-0">
+            <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${m.sender === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-gray-600'}">${m.sender === 'user' ? 'Res.' : 'Bot'}</span>
+            <span class="text-[10px] text-gray-600 leading-relaxed">${m.texto.substring(0, 100)}${m.texto.length > 100 ? '…' : ''}</span>
+        </div>
+    `).join('');
+}
+
+function renderWelcome(showMsg = true) {
+    if (!showMsg) return;
+    const container = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.className = 'flex space-x-3 max-w-2xl';
+    div.innerHTML = `
+        <div class="w-9 h-9 rounded-xl bot-avatar flex items-center justify-center shrink-0 text-xs font-bold">B</div>
+        <div class="bot-bubble rounded-2xl px-5 py-4 text-sm shadow-sm leading-relaxed">
+            <div class="inline-block px-3 py-2 rounded-lg mb-3" style="background:#000">
+                <span style="font-size:12px;font-weight:900;color:#fff;letter-spacing:-0.02em;line-height:1;display:block">BLEND</span>
+                <span style="font-size:7px;color:#fff;letter-spacing:0.18em;text-transform:uppercase;display:block;margin-top:2px">Apoquindo</span>
+            </div>
+            <br>${i18n[currentLang].welcomeMsg}
+        </div>`;
+    container.appendChild(div);
+}
+
+function handleKeyPress(e) { if (e.key === 'Enter') enviarConsulta(); }
+
+function sincronizarDepto() { return document.getElementById('input-depto-opcional').value.trim(); }
+
+function mostrarSugerencias() {
+    var container = document.getElementById('chat-messages');
+    var temas = currentLang === 'es' ? [
+        { label: '🏠 Acceso / PIN',       query: 'como accedo al edificio' },
+        { label: '🔑 Olvido de llaves',    query: 'olvide mis llaves' },
+        { label: '🚗 Estacionamiento',     query: 'normas del estacionamiento' },
+        { label: '🛵 Delivery',            query: 'como retiro mi delivery' },
+        { label: '📦 Encomiendas',         query: 'como retiro una encomienda' },
+        { label: '🔥 Quinchos',            query: 'horario y precio del quincho' },
+        { label: '🏊 Piscina',             query: 'horario de la piscina' },
+        { label: '💪 Gimnasio',            query: 'horario del gimnasio' },
+        { label: '🐾 Mascotas',            query: 'puedo tener mascota' },
+        { label: '🚛 Mudanzas',            query: 'horario de mudanzas' },
+        { label: '🗑 Basura / Reciclaje',  query: 'como saco la basura' },
+        { label: '🔊 Ruidos',              query: 'hasta que hora puedo hacer ruido' },
+        { label: '⚠️ Multas',             query: 'cuanto es la multa' },
+        { label: '🧹 Limpieza del piso',   query: 'como limpio el piso' },
+    ] : [
+        { label: '🏠 Access / PIN',        query: 'how do I access the building' },
+        { label: '🔑 Forgot keys',         query: 'I forgot my keys' },
+        { label: '🚗 Parking',             query: 'parking rules' },
+        { label: '🛵 Delivery',            query: 'how to pick up my delivery' },
+        { label: '📦 Packages',            query: 'how to pick up a package' },
+        { label: '🔥 BBQ Areas',           query: 'bbq area hours and price' },
+        { label: '🏊 Pool',                query: 'pool hours' },
+        { label: '💪 Gym',                 query: 'gym hours' },
+        { label: '🐾 Pets',                query: 'can I have a pet' },
+        { label: '🚛 Moving',              query: 'moving hours' },
+        { label: '📞 Contact Admin',               query: 'how do I contact the administration' },
+        { label: '💰 HOA Fees',                query: 'when are hoa fees due' },
+        { label: '🗑 Garbage',             query: 'how to take out garbage' },
+        { label: '🔊 Noise',               query: 'noise hours' },
+        { label: '⚠️ Fines',              query: 'how much is the fine' },
+        { label: '🧹 Floor care',          query: 'how to clean the floor' },
+    ];
+
+    var div = document.createElement('div');
+    div.className = 'flex space-x-3 max-w-2xl';
+    div.id = 'sugerencias-bloque';
+
+    var inner = '<div class="w-9 h-9 rounded-xl bot-avatar flex items-center justify-center shrink-0 text-xs font-bold">B</div>';
+    inner += '<div class="bot-bubble rounded-2xl px-4 py-3 text-sm shadow-sm">';
+    inner += '<p class="text-xs text-gray-400 mb-2.5 font-medium">';
+    inner += (currentLang === 'es') ? 'Estos son los temas que puedo ayudarte:' : 'Here are the topics I can help with:';
+    inner += '</p><div class="flex flex-wrap gap-1.5">';
+
+    temas.forEach(function(t) {
+        var btn = document.createElement('button');
+        btn.className = 'sugerencia-chip text-[11px] font-medium px-3 py-1.5 rounded-full border border-gray-200 bg-white hover:bg-black hover:text-white hover:border-black transition-all cursor-pointer whitespace-nowrap';
+        btn.textContent = t.label;
+        btn.dataset.query = t.query;
+        // Note: outerHTML loses event listeners — listeners re-attached below
+        inner += btn.outerHTML;
+    });
+
+    inner += '</div></div>';
+    div.innerHTML = inner;
+
+    // Re-attach listeners after innerHTML (outerHTML loses listeners)
+    var btns = div.querySelectorAll('.sugerencia-chip');
+    btns.forEach(function(btn, i) {
+        btn.addEventListener('click', function() { enviarSugerencia(temas[i].query); });
+    });
+
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+
+function enviarSugerencia(query) {
+    var bloque = document.getElementById('sugerencias-bloque');
+    if (bloque) bloque.remove();
+    document.getElementById('input-query').value = query;
+    enviarConsulta();
+}
+
+var _feedbackCounter = 0;
+function appendMessage(texto, sender, guardar) {
+    var container = document.getElementById('chat-messages');
+    var div = document.createElement('div');
+    div.className = sender === 'user'
+        ? 'flex space-x-3 max-w-2xl ml-auto justify-end'
+        : 'flex space-x-3 max-w-2xl';
+
+    if (sender === 'user') {
+        div.innerHTML = '<div class="user-bubble rounded-2xl px-5 py-3 text-sm shadow-sm">' + texto + '</div>';
+    } else {
+        var fbId = 'fb-' + (++_feedbackCounter);
+        var bubble = document.createElement('div');
+        bubble.className = 'bot-bubble rounded-2xl px-5 py-3 text-sm shadow-sm leading-relaxed';
+        bubble.innerHTML = texto;
+
+        var fbRow = document.createElement('div');
+        fbRow.id = fbId;
+        fbRow.className = 'flex items-center gap-2 pl-1';
+
+        var lbl = document.createElement('span');
+        lbl.className = 'text-[10px] text-gray-400';
+        lbl.textContent = currentLang === 'en' ? 'Was this helpful?' : 'Te fue util?';
+
+        var btnSi = document.createElement('button');
+        btnSi.className = 'text-[11px] px-2 py-0.5 rounded-full border border-gray-200 hover:bg-black hover:text-white hover:border-black transition-all';
+        btnSi.textContent = currentLang === 'en' ? 'Yes' : 'Si';
+        btnSi.addEventListener('click', function() { darFeedback(true, fbId); });
+
+        var btnNo = document.createElement('button');
+        btnNo.className = 'text-[11px] px-2 py-0.5 rounded-full border border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-all';
+        btnNo.textContent = 'No';
+        btnNo.addEventListener('click', function() { darFeedback(false, fbId); });
+
+        fbRow.appendChild(lbl);
+        fbRow.appendChild(btnSi);
+        fbRow.appendChild(btnNo);
+
+        var wrapper = document.createElement('div');
+        wrapper.className = 'flex flex-col gap-1.5 max-w-xl';
+        wrapper.appendChild(bubble);
+        wrapper.appendChild(fbRow);
+
+        var avatar = document.createElement('div');
+        avatar.className = 'w-9 h-9 rounded-xl bot-avatar flex items-center justify-center shrink-0 text-xs font-bold';
+        avatar.textContent = 'B';
+
+        div.appendChild(avatar);
+        div.appendChild(wrapper);
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+        return;
+    }
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+
+function darFeedback(positivo, fbId) {
+    var fbEl = document.getElementById(fbId);
+    if (!fbEl) return;
+    if (positivo) {
+        fbEl.innerHTML = '<span class="text-[10px] text-gray-400">Gracias</span>';
+    } else {
+        fbEl.innerHTML = '<span class="text-[10px] text-red-400">Lo mejoramos pronto</span>';
+        var msgs = document.querySelectorAll('#chat-messages .user-bubble');
+        var lastQ = msgs.length ? msgs[msgs.length-1].textContent.trim() : 'sin texto';
+        feedbackNegativo.push({ pregunta: lastQ, fecha: ahora(), depto: sincronizarDepto() || 'Anonimo' });
+        renderFeedbackQueue();
+        mostrarToast('Registrado. Admin revisara esta respuesta.');
+    }
+}
+
+function mostrarEscribiendo(aiMode) {
+    var container = document.getElementById('chat-messages');
+    var div = document.createElement('div');
+    var id = 'typing-' + Date.now();
+    div.id = id;
+    div.className = 'flex space-x-3 max-w-2xl';
+    var aiTag = aiMode && localStorage.getItem('resibot_groq_key')
+        ? '<span class="text-[10px] text-gray-400 font-medium ml-1.5 italic">analizando...</span>'
+        : '';
+    div.innerHTML =
+        '<div class="w-9 h-9 rounded-xl bot-avatar flex items-center justify-center shrink-0 text-xs font-bold">B</div>' +
+        '<div class="bot-bubble rounded-2xl px-5 py-3 text-sm shadow-sm flex items-center gap-1.5">' +
+            '<span class="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style="animation-delay:0ms"></span>' +
+            '<span class="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style="animation-delay:150ms"></span>' +
+            '<span class="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style="animation-delay:300ms"></span>' +
+            aiTag +
+        '</div>';
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    return id;
+}
+
+function quitarEscribiendo(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+}
+
+function enviarEmailAdmin(entrada) {
+    const asunto  = entrada.urgente
+        ? `🚨 URGENTE — Consulta de ${entrada.residente} sin resolver`
+        : `⚠️ Consulta no resuelta — ${entrada.residente}`;
+    const cuerpo  = `Depto: ${entrada.residente}\nConsulta: ${entrada.query}\nCategoría: ${entrada.categoria}\nHora: ${entrada.fecha}\nUrgente: ${entrada.urgente ? 'SÍ' : 'No'}`;
+
+    // Intenta EmailJS si está configurado
+    if (EMAILJS_SERVICE !== 'TU_SERVICE_ID') {
+        emailjs.init(EMAILJS_PUBLIC_KEY);
+        emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+            to_email:  EMAIL_ADMIN,
+            subject:   asunto,
+            body:      cuerpo,
+            residente: entrada.residente,
+            consulta:  entrada.query,
+            categoria: entrada.categoria,
+            urgente:   entrada.urgente ? 'SÍ' : 'No',
+        }).catch(() => fallbackMailto(asunto, cuerpo));
+    } else {
+        // Fallback: abre cliente de correo del sistema
+        fallbackMailto(asunto, cuerpo);
+    }
+
+    mostrarToast(entrada.urgente ? '🚨 Aviso urgente enviado al administrador' : '📨 Consulta derivada a administración');
+}
+
+function fallbackMailto(asunto, cuerpo) {
+    const url = `mailto:${EMAIL_ADMIN}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
+    window.open(url, '_blank');
+}
+
+function exportarCSV() {
+    const header = ['Unidad', 'Consulta', 'Categoría', 'Urgente', 'Fecha', 'Estatus'];
+    // Note: includes in-session logs only. Persistent history is in localStorage per depto.
+    const rows   = logsConsultas.map(l => [
+        `"${l.residente}"`,
+        `"${l.query.replace(/"/g, '""')}"`,
+        `"${l.categoria}"`,
+        l.urgente ? 'Sí' : 'No',
+        `"${l.fecha}"`,
+        `"${l.precision}"`,
+    ]);
+    const csv    = [header.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob   = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url    = URL.createObjectURL(blob);
+    const a      = document.createElement('a');
+    a.href       = url;
+    a.download   = `blend_auditoria_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    mostrarToast('✅ CSV exportado correctamente');
+}
+
+function renderFeedbackQueue() {
+    var el = document.getElementById('feedback-queue');
+    if (!el) return;
+    var badge = document.getElementById('feedback-badge');
+    if (feedbackNegativo.length === 0) {
+        el.innerHTML = '<p class="text-[11px] text-gray-400 text-center py-2">Sin feedback negativo. El bot va bien.</p>';
+        if (badge) badge.classList.add('hidden');
+        return;
+    }
+    if (badge) { badge.textContent = feedbackNegativo.length; badge.classList.remove('hidden'); }
+    el.innerHTML = feedbackNegativo.map(function(f, i) {
+        return '<div class="flex items-start justify-between gap-2 py-2 border-b border-gray-100 last:border-0">' +
+            '<div class="flex-1 min-w-0">' +
+                '<p class="text-[11px] font-medium text-gray-700 truncate">' + f.pregunta.substring(0,55) + '</p>' +
+                '<p class="text-[10px] text-gray-400">' + f.depto + ' - ' + f.fecha + '</p>' +
+            '</div>' +
+            '<button onclick="agregarRespuesta(' + i + ')" class="shrink-0 text-[10px] font-semibold px-2 py-1 rounded-lg" style="background:#000;color:#fff">+ BBDD</button>' +
+        '</div>';
+    }).join('');
+}
+
+function agregarRespuesta(idx) {
+    var f = feedbackNegativo[idx];
+    var clave = prompt('Clave para la nueva respuesta (ej: bodega, conserje):');
+    if (!clave || !clave.trim()) return;
+    var resp = prompt('Respuesta del bot para: "' + f.pregunta.substring(0,60) + '"');
+    if (!resp || !resp.trim()) return;
+    var code = 'En baseConocimiento.es, agrega:\n' + clave.trim() + ': "' + resp.trim() + '",' +
+               '\n\nEn detectarRespuesta(), agrega antes de return null;\n' +
+               'if (tiene(n, "' + clave.trim() + '")) return { respuesta: base.' + clave.trim() + ', categoria: "Nueva respuesta" };';
+    alert('Copia este codigo en el archivo HTML:\n\n' + code);
+    feedbackNegativo.splice(idx, 1);
+    renderFeedbackQueue();
+    mostrarToast('Agrega el codigo al archivo y recarga.');
+}
+
+function renderDashboardAdmin() {
+    // Tabla
+    const tbody = document.getElementById('tabla-logs-body');
+    tbody.innerHTML = '';
+    logsConsultas.forEach(log => {
+        const badgeClass    = log.precision === 'Resuelto' ? 'badge-ok' : 'badge-no';
+        const resStyle      = log.residente === 'Anónimo' ? 'color:#aaa;font-style:italic' : 'font-weight:600';
+        const urgBadge      = log.urgente ? '<span class="badge-urgent px-1.5 py-0.5 rounded text-[9px] font-semibold ml-1">⚠ URGENTE</span>' : '—';
+        const tr = document.createElement('tr');
+        tr.className = 'dash-row transition-colors';
+        tr.innerHTML = `
+            <td class="p-3 text-xs" style="${resStyle}">${log.residente}</td>
+            <td class="p-3 text-xs text-gray-500 max-w-[220px] truncate">${log.query}</td>
+            <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-medium" style="background:#f4f4f4;border:1px solid #e8e8e8">${log.categoria}</span></td>
+            <td class="p-3">${urgBadge}</td>
+            <td class="p-3 text-xs text-gray-400">${log.fecha}</td>
+            <td class="p-3 text-center"><span class="px-2 py-0.5 rounded-md font-semibold text-[10px] ${badgeClass}">${log.precision === 'Resuelto' ? '✓ Resuelto' : '✗ No resuelto'}</span></td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    // Stats
+    const urgentes  = logsConsultas.filter(l => l.urgente).length;
+    const resueltas = logsConsultas.filter(l => l.precision === 'Resuelto').length;
+    document.getElementById('stat-total-consultas').textContent = logsConsultas.length;
+    var desvioEl = document.getElementById('stat-desvio');
+    if (desvioEl) {
+        var pct = logsConsultas.length > 0 ? Math.round((resueltas / logsConsultas.length) * 100) : 0;
+        desvioEl.textContent = pct + '%';
+    }
+    document.getElementById('stat-urgentes').textContent  = urgentes;
+    document.getElementById('stat-resueltas').textContent = resueltas;
+
+    // Barras temáticas — recalculadas desde logsConsultas reales
+    var catCount = {};
+    logsConsultas.forEach(function(l) {
+        catCount[l.categoria] = (catCount[l.categoria] || 0) + 1;
+    });
+    var totalLogs = logsConsultas.length || 1;
+    // Merge con seed data para que siempre haya algo que mostrar
+    var liveTopics = Object.keys(catCount).map(function(cat) {
+        return { nombre: cat, total: catCount[cat], porcentaje: Math.round((catCount[cat]/totalLogs)*100) };
+    }).sort(function(a,b){ return b.total - a.total; }).slice(0, 6);
+    var displayTopics = liveTopics.length >= 2 ? liveTopics : topicosData;
+
+    var container = document.getElementById('container-topics');
+    container.innerHTML = '';
+    displayTopics.forEach(function(t) {
+        var item = document.createElement('div');
+        item.className = 'space-y-1.5';
+        item.innerHTML =
+            '<div class="flex justify-between text-xs">' +
+                '<span class="font-medium">' + t.nombre + '</span>' +
+                '<span class="text-gray-400 font-mono">' + t.total + ' · ' + t.porcentaje + '%</span>' +
+            '</div>' +
+            '<div class="w-full bar-track h-1.5 rounded-full overflow-hidden">' +
+                '<div class="h-full rounded-full transition-all duration-300" style="background:#000;width:' + t.porcentaje + '%"></div>' +
+            '</div>';
+        container.appendChild(item);
+    });
+}
+
+function ejecutarReentrenamiento() {
+    const btn = document.getElementById('btn-reentrenar');
+    btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Procesando...`;
+    btn.disabled = true;
+    setTimeout(() => {
+        document.getElementById('txt-precision').textContent = '96.4%';
+        document.getElementById('bar-precision').style.width = '96.4%';
+        btn.innerHTML = `<i class="fa-solid fa-circle-check"></i> Actualizado`;
+        mostrarToast('✅ Base de conocimiento optimizada');
+        setTimeout(() => {
+            btn.innerHTML = `<i class="fa-solid fa-arrows-spin"></i> Re-entrenar`;
+            btn.disabled = false;
+        }, 2500);
+    }, 1400);
+}
+
+function ahora() {
+    const d = new Date();
+    return `Hoy, ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+}
+
+function mostrarToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+
+async function enviarConsulta() {
+    var input     = document.getElementById('input-query');
+    var queryText = input.value.trim();
+    if (!queryText) return;
+    input.value = '';
+
+    var depto     = sincronizarDepto();
+    var remitente = depto ? 'Depto ' + depto : 'Anónimo';
+
+    appendMessage(queryText, 'user');
+    try { guardarMensaje(depto, 'user', queryText); } catch(e) {}
+
+    if (isUrgent) appendMessage(i18n[currentLang].urgentNote, 'bot');
+
+    var typingId = mostrarEscribiendo(true);
+    await new Promise(function(r) { setTimeout(r, 400); });
+
+    var respuesta, categoria, resuelto;
+
+    // ── Intenta IA ────────────────────────────────────────────
+    var aiKey = localStorage.getItem('resibot_groq_key');
+    if (aiKey) {
+        var aiResp = await callGroqAI(queryText);
+        if (aiResp) {
+            respuesta = aiResp;
+            categoria = 'IA · Análisis Contextual';
+            resuelto  = true;
+        }
+    }
+
+    // ── Fallback palabras clave ───────────────────────────────
+    if (!respuesta) {
+        var detected = detectarRespuesta(queryText);
+        respuesta = detected ? detected.respuesta : i18n[currentLang].noAnswer;
+        categoria = detected ? detected.categoria  : 'Dudas No Mapeadas';
+        resuelto  = !!detected;
+    }
+
+    quitarEscribiendo(typingId);
+    appendMessage(respuesta, 'bot');
+    if (!resuelto) mostrarSugerencias();
+    try { guardarMensaje(depto, 'bot', respuesta); } catch(e) {}
+
+    var entrada = {
+        residente: remitente, query: queryText,
+        categoria: categoria, fecha: ahora(),
+        precision: resuelto ? 'Resuelto' : 'No Resuelto',
+        urgente: isUrgent,
+    };
+    logsConsultas.unshift(entrada);
+    renderDashboardAdmin();
+
+    if (!resuelto || isUrgent) {
+        mostrarToast(isUrgent ? 'Consulta urgente registrada' : 'Consulta derivada a administración');
+        if (EMAILJS_SERVICE !== 'TU_SERVICE_ID') enviarEmailAdmin(entrada);
+    }
+    if (isUrgent) { isUrgent = false; document.getElementById('urgency-toggle').classList.remove('active'); }
+}
+
+</script>
+</body>
+</html>

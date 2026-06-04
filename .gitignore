@@ -1,0 +1,6 @@
+# Archivos privados — NO subir a GitHub
+API_KEYS_PRIVADO.txt
+*.py
+__pycache__/
+.claude/
+*.log
