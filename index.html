@@ -493,7 +493,7 @@ const baseConocimiento = {
         bicicletas:     "Las bicicletas y e-bikes deben guardarse solo en los bicicleteros habilitados o en tu bodega. Prohibido subirlas en los ascensores, dejarlas en terrazas o colgarlas en barandas. La administración no se responsabiliza por robos o pérdidas.",
         // ── DELIVERY Y ECOMMERCE ────────────────────────────────────
         delivery:       "Los deliverys y empresas de reparto NO pueden subir a los pisos del edificio. Debes bajar a recepción o a la Sala de Ecommerce (piso 1, frente a recepción) a retirar tus pedidos. Tienes máximo 15 minutos para retirar pedidos de comida. Para emergencias o consultas contacta al teléfono del edificio Blend-LAR.",
-        ecommerce:      "La Sala de Ecommerce está en el piso 1, frente a recepción. Funciona las 24 horas todos los días del año. Cuenta con casilleros Kubi para recibir todo tipo de encomiendas. Los pedidos de comida deben retirarse en máximo 15 minutos o la administración los retirará.",
+        ecommerce:      "Cuando llega una encomienda o paquete, el sistema te avisa automaticamente por correo electronico. Puedes retirarlo cuando quieras en la Sala de Ecommerce (piso 1, frente a recepcion) — funciona las 24 hrs con casilleros Kubi. No hay tiempo limite para retirar encomiendas. Los pedidos de comida si tienen maximo 15 minutos para retirarse.",
         // ── ASCENSORES ──────────────────────────────────────────────
         ascensor:       "Los ascensores deben usarse responsablemente. Dar prioridad a personas con movilidad reducida. Prohibido transportar muebles, bicicletas u objetos pesados sin autorización y protecciones. Menores de 12 años solo con adulto. No bloquear puertas ni abrirlas manualmente. En caso de falla: usa el botón de emergencia y espera asistencia.",
         // ── MUDANZAS ────────────────────────────────────────────────
@@ -803,7 +803,12 @@ function detectarRespuesta(texto) {
     if (tiene(n, 'encomienda', 'paquete', 'kubi', 'locker', 'casillero',
                   'sala de ecommerce', 'ecommerce', 'amazon', 'mercado libre',
                   'retiro de paquete', 'retiro de encomienda',
-                  'donde retiro', 'donde recibo'))
+                  'donde retiro', 'donde recibo',
+                  'llegaron mis pedidos', 'como se si llego', 'como se si llegaron',
+                  'saber si llego mi paquete', 'me avisaron de mi paquete',
+                  'llego algo para mi', 'tengo un paquete', 'llegue a buscar',
+                  'me llego algo', 'aviso de encomienda', 'notificacion de paquete',
+                  'cuando llega mi paquete', 'como me avisan'))
         return { respuesta: base.ecommerce, categoria: 'Delivery / Ecommerce' };
 
     // ─── 12. ASCENSORES ───────────────────────────────────────────────────
