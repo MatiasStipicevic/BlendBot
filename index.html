@@ -384,10 +384,13 @@ function buildSystemPrompt() {
     return 'Eres el asistente de Blend Apoquindo, un edificio residencial de lujo en Las Condes, Santiago de Chile. ' +
     'Hablas en ' + lang + ' con un tono cercano, amable y natural — como un conserje experto que conoce el edificio de memoria. ' +
     'NUNCA menciones el reglamento, normas, articulos, ni que eres un bot. Simplemente da la informacion de forma directa y conversacional. ' +
-    'NUNCA uses frases como: "Segun el reglamento", "El reglamento indica", "La normativa dice", "De acuerdo a las normas". ' +
-    'En cambio, habla asi: "Claro, el quincho cierra a las 00:00", "El maximo es 20 personas", "Para eso tienes que coordinar con conserjeria". ' +
-    'Usa el conocimiento del edificio para responder directamente. Si algo no esta en tu informacion, di: "Para eso te recomiendo escribir a gsilva@largroup.cl, te ayudan rapido." ' +
-    'Si la pregunta es ambigua, haz UNA pregunta corta para aclarar. Respuestas cortas — maximo 3-4 oraciones. ' +
+    'NUNCA uses frases como: "Segun el reglamento", "El reglamento indica", "La normativa dice". ' +
+    'MUY IMPORTANTE — entiende la INTENCION del residente, no solo las palabras literales. Ejemplos: ' +
+    '"perdi el acceso" = necesita recuperar su PIN o llave, NO informacion sobre como funcionan las visitas. ' +
+    '"no puedo entrar" = esta bloqueado afuera, necesita que le abran o recuperar su acceso. ' +
+    '"no me funciona" = tiene un problema con algo especifico, pregunta que es lo que no funciona. ' +
+    'Responde como un conserje experto: practico, directo, amable. Maximo 3-4 oraciones. ' +
+    'Si algo no esta en tu informacion, di: "Para eso escribe a gsilva@largroup.cl, te ayudan rapido." ' +
     '=== REGLAMENTO INTERNO BLEND APOQUINDO ===\n\n' +
     '[ACCESO]\n' + b.acceso + '\n\n[VISITAS]\n' + b.visitas + '\n\n[LLAVES]\n' + b.llaves + '\n\n' +
     '[CAPACIDAD]\n' + b.capacidad + '\n\n[SERVICIOS]\n' + b.servicios + '\n\n[MODIFICACIONES]\n' + b.modificaciones + '\n\n' +
@@ -712,13 +715,15 @@ function detectarRespuesta(texto) {
 
     // ─── 2. LLAVES / ACCESO DE EMERGENCIA ─────────────────────────────────
     if (tiene(n, 'olvide', 'olvid', 'perdi la llave', 'perdi mi llave', 'perdi mis llaves',
-                  'perdi el pin', 'no puedo entrar', 'no puedo abrir',
+                  'perdi el pin', 'perdi el acceso', 'perdi acceso',
+                  'sin acceso al edificio', 'no tengo acceso', 'perdi mi acceso',
+                  'no puedo entrar', 'no puedo abrir', 'no puedo acceder',
                   'olvide mi llave', 'olvide el pin', 'dispositivo de acceso',
                   'abrir mi depto', 'abrir el depto',
                   'abrir el departamento', 'abrir mi departamento',
                   'pueden abrir', 'puede abrir', 'abrir la puerta del depto',
                   'me quede sin llave', 'me quede afuera', 'quede afuera',
-                  'locked out', 'lost my key', 'forgot my key'))
+                  'locked out', 'lost my key', 'forgot my key', 'lost access'))
         return { respuesta: base.llaves, categoria: 'Acceso / Seguridad' };
 
     // ─── 3. VISITAS AL DEPARTAMENTO ───────────────────────────────────────
@@ -744,8 +749,9 @@ function detectarRespuesta(texto) {
 
     // ─── 4. ACCESO / PIN ──────────────────────────────────────────────────
     if (tiene(n, 'pin', 'clave de acceso', 'codigo de acceso', 'como entro',
-                  'como ingreso', 'como accedo', 'puerta del edificio',
-                  'entrada al edificio', 'acceso al edificio'))
+                  'como ingreso', 'como accedo', 'como se entra al edificio',
+                  'como funciona el acceso', 'puerta del edificio',
+                  'entrada al edificio'))
         return { respuesta: base.acceso, categoria: 'Acceso / Seguridad' };
 
     // ─── 5. CAPACIDAD ─────────────────────────────────────────────────────
