@@ -375,7 +375,7 @@ const EMAILJS_PUBLIC_KEY = "TU_PUBLIC_KEY";
 // MOTOR DE IA — Groq (llama-3.3-70b · free tier)
 // Clave gratuita en: https://console.groq.com
 // ════════════════════════════════════════════════════════════════
-const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions';
+const GROQ_URL   = '/api/chat'; // Proxy seguro en Vercel — key privada en servidor
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
 function buildSystemPrompt() {
@@ -419,10 +419,9 @@ function buildMessages(userMessage) {
 }
 
 async function callGroqAI(userMessage) {
-    // Clave hardcodeada: funciona para todos los usuarios sin configuracion
-    // El admin puede sobrescribir con su propia key desde el panel
-    var DEFAULT_KEY = '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';
-    var apiKey = localStorage.getItem('resibot_groq_key') || DEFAULT_KEY;
+    // La key vive de forma segura en Vercel (variable de entorno)
+    // El admin puede sobrescribir desde el panel si quiere usar otra key
+    var apiKey = localStorage.getItem('resibot_groq_key') || 'proxy';
     if (!apiKey) return null;
     var controller = new AbortController();
     var timeoutId  = setTimeout(function() { controller.abort(); }, 20000); // 20s max
