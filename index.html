@@ -421,7 +421,7 @@ function buildMessages(userMessage) {
 async function callGroqAI(userMessage) {
     // Clave hardcodeada: funciona para todos los usuarios sin configuracion
     // El admin puede sobrescribir con su propia key desde el panel
-    var DEFAULT_KEY = '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';
+    var DEFAULT_KEY = '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';
     var apiKey = localStorage.getItem('resibot_groq_key') || DEFAULT_KEY;
     if (!apiKey) return null;
     var controller = new AbortController();
