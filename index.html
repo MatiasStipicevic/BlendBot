@@ -710,7 +710,10 @@ function detectarRespuesta(texto) {
     if ((mencionaEstac && mencionaVisita) ||
         tiene(n, 'estacionamiento de visita', 'parking de visita',
                   'parking para visita', 'mi visita en el estacionamiento',
-                  'visitas en el estacionamiento'))
+                  'visitas en el estacionamiento',
+                  'cuantas horas puede estar el auto', 'tiempo limite del auto',
+                  'cuanto puede estar el auto de mi visita',
+                  'cuanto tiempo puede estar el auto', 'horas de estacionamiento visita'))
         return { respuesta: base.visita_estac, categoria: 'Estacionamientos' };
 
     // ─── 2. LLAVES / ACCESO DE EMERGENCIA ─────────────────────────────────
@@ -755,7 +758,8 @@ function detectarRespuesta(texto) {
         return { respuesta: base.acceso, categoria: 'Acceso / Seguridad' };
 
     // ─── 5. CAPACIDAD ─────────────────────────────────────────────────────
-    if (tiene(n, 'cuantas personas', 'cuantos residentes', 'maximo de personas',
+    if (!tiene(n, 'quincho', 'quinchos', 'sala', 'salon', 'piscina') &&
+        tiene(n, 'cuantas personas', 'cuantos residentes', 'maximo de personas',
                   'cuantos pueden vivir', 'cuantos en el depto',
                   'limite de personas', 'pueden vivir', 'cuantos pueden'))
         return { respuesta: base.capacidad, categoria: 'Reglamento Interno' };
@@ -790,11 +794,12 @@ function detectarRespuesta(texto) {
     // ─── 9. ESTACIONAMIENTO GENERAL ───────────────────────────────────────
     // FIX: agrega 'velocidad', 'manejar', 'conducir'
     if (mencionaEstac ||
-        tiene(n, 'garaje', 'donde dejo el auto', 'lavar el auto',
+        tiene(n, 'garaje', 'donde dejo el auto', 'lavar el auto', 'lavarme el auto',
+                  'lavar mi auto', 'subterraneo', 'nivel menos', 'nivel -',
                   'auto en el edificio', 'vehiculo', 'velocidad',
                   'velocidad maxima', 'limite de velocidad',
                   'a que velocidad', 'manejar dentro', 'conducir dentro',
-                  'velocidad permitida'))
+                  'velocidad permitida', 'alguien en mi espacio', 'ocuparon mi estacionamiento'))
         return { respuesta: base.estacionamiento, categoria: 'Estacionamientos' };
 
     // ─── 10. DELIVERY ─────────────────────────────────────────────────────
@@ -819,6 +824,7 @@ function detectarRespuesta(texto) {
 
     // ─── 12. ASCENSORES ───────────────────────────────────────────────────
     if (!mencionaMascota &&
+        !tiene(n, 'nuevo ascensor', 'ascensor nuevo', 'cuando llega el ascensor') &&
         tiene(n, 'ascensor', 'elevador', 'subir en ascensor',
                   'ascensor no funciona', 'falla del ascensor',
                   'ascensor bloqueado', 'ascensor atrapado', 'ascensor roto'))
@@ -846,10 +852,16 @@ function detectarRespuesta(texto) {
 
     // ─── 16. MASCOTAS (antes de ruidos para evitar "mi gato hace ruido" → ruido) ──
     // FIX: sube mascotas ANTES de ruidos para que "mi gato/perro" se detecte bien
+    // Compound: mascota+piscina → piscina (that answer is more specific)
+    if (mencionaMascota && mencionaPiscina)
+        return { respuesta: base.piscina, categoria: 'Areas Comunes / Piscina' };
+
     if (mencionaMascota ||
         tiene(n, 'puedo tener mascota', 'registro de mascota',
                   'autorizar mascota', 'correa del perro',
                   'caca del perro', 'tengo mascotas', 'se permiten mascotas',
+                  'labrador', 'golden', 'bulldog', 'chihuahua', 'beagle',
+                  'raza de perro', 'tipo de mascota permitida', 'cuanto pesa el limite',
                   'policy de mascotas', 'politica de mascotas',
                   'can i have a dog', 'can i have a cat', 'can i have a pet',
                   'pets allowed', 'are pets allowed', 'bring my dog', 'bring my cat'))
@@ -860,7 +872,7 @@ function detectarRespuesta(texto) {
                   'numero de la administracion', 'contactar administracion',
                   'contactar con administracion', 'hablar con administracion',
                   'hablar con alguien', 'necesito contactar', 'necesito comunicarme',
-                  'quien me puede ayudar', 'a quien llamo', 'a quien contacto',
+                  'quien me puede ayudar', 'a quien contacto',
                   'numero del edificio', 'telefono del edificio', 'hablar con el edificio',
                   'datos de contacto', 'informacion de contacto',
                   'como contacto', 'como me comunico', 'como llego a',
@@ -876,7 +888,12 @@ function detectarRespuesta(texto) {
     if (tiene(n, 'gastos comunes', 'gasto comun', 'eecc', 'fee comun', 'hoa fee',
                   'cuando se pagan', 'cuando vencen', 'cuando pagar', 'cuanto pago de',
                   'liquidacion', 'estado de cuenta', 'cobro mensual', 'cobro del edificio',
-                  'cuota mensual', 'pagar el edificio'))
+                  'cuota mensual', 'pagar el edificio',
+                  'multa por pago tarde', 'multa si no pago', 'multa si pago tarde',
+                  'cuanto es la multa si pago', 'interes por atraso', 'multa por atraso',
+                  'link de pago', 'no me llego el link', 'link del gasto',
+                  'como pago el gasto', 'donde pago', 'pago en linea',
+                  'pagar tarde', 'vencimiento del pago'))
         return { respuesta: base.eecc, categoria: 'Gastos Comunes' };
 
     // ── ELECTRODOMÉSTICOS ─────────────────────────────────────────────────
@@ -935,7 +952,11 @@ function detectarRespuesta(texto) {
                   'grill', 'bbq', 'asado', 'asao', 'parrilla',
                   'hacer un asado', 'hacer asao', 'reservar quincho',
                   'cuanto cuesta el quincho', 'horario del quincho',
-                  'aforo del quincho', 'spicy', 'tasty', 'crispy',
+                  'aforo del quincho', 'cuantas personas al quincho',
+                  'cuantas personas puedo llevar', 'cuantos puedo llevar', 'capacidad del quincho',
+                  'cancelar una reserva', 'como cancelo una reserva', 'cancelar reserva que hice',
+                  'cancelar reserva del quincho', 'como cancelo el quincho',
+                  'spicy', 'tasty', 'crispy',
                   'salon de eventos', 'sala de eventos'))
         return { respuesta: base.quincho, categoria: 'Areas Comunes / Quinchos' };
 
@@ -1046,14 +1067,19 @@ function detectarRespuesta(texto) {
         return { respuesta: base.queja, categoria: 'Quejas' };
 
     if (tiene(n, 'proceso de salida', 'cuando me voy del depto', 'me voy del departamento',
-                  'termino mi contrato', 'me voy del edificio', 'check out', 'checkout del depto',
+                  'termino mi contrato', 'terminar mi contrato', 'quiero terminar el contrato',
+                  'me voy del edificio', 'check out', 'checkout del depto',
                   'cuanto tiempo de aviso', 'aviso de salida', 'finiquito', 'dias de anticipacion',
                   'cuando aviso que me voy', 'quiero salir del depto', 'terminar contrato',
-                  'vencimiento del contrato'))
+                  'vencimiento del contrato', 'dar aviso de salida', 'dar aviso al edificio',
+                  'dejar el departamento', 'dejar el depto', 'entregar el depto'))
         return { respuesta: base.salida, categoria: 'Proceso de Salida' };
 
     if (tiene(n, 'garantia', 'devolucion de garantia', 'cuando me devuelven la garantia',
-                  'cuando devuelven el deposito', 'deposito de arriendo', 'deposit return'))
+                  'cuando devuelven el deposito', 'deposito de arriendo', 'deposit return',
+                  'cuando me devuelven mi deposito', 'devolucion del deposito',
+                  'me devuelven la plata', 'devolucion de la plata del arriendo',
+                  'plazo para devolver', 'en cuanto tiempo devuelven'))
         return { respuesta: base.garantia, categoria: 'Garantia' };
 
     if (tiene(n, 'visita de mantencion', 'visita de mantenimiento al depto',
